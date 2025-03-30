@@ -40,7 +40,7 @@ public class ServiceUserImpl implements ServiceUser{
 
         if (existingUser.isPresent()) {
             User userToUpdate = existingUser.get();
-            userToUpdate.setSerName(user.getSerName());
+            userToUpdate.setSurname(user.getSurname());
             userToUpdate.setEmail(user.getEmail());
             userToUpdate.setPassword(user.getPassword());
             userToUpdate.setDireccion(user.getDireccion());
