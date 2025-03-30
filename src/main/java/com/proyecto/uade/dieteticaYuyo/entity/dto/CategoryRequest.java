@@ -1,4 +1,4 @@
-package com.proyecto.uade.dieteticaYuyo.model.dto;
+package com.proyecto.uade.dieteticaYuyo.entity.dto;
 
 import lombok.Data;
 

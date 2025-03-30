@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
-import com.proyecto.uade.dieteticaYuyo.model.User;
 import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;;
 
 @Service

@@ -1,4 +1,4 @@
-package com.proyecto.uade.dieteticaYuyo.model;
+package com.proyecto.uade.dieteticaYuyo.entity;
 
 import java.util.Locale.Category;
 

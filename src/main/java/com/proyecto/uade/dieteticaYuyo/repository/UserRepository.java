@@ -1,7 +1,9 @@
 package com.proyecto.uade.dieteticaYuyo.repository;
-import com.proyecto.uade.dieteticaYuyo.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.proyecto.uade.dieteticaYuyo.entity.User;
+
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {

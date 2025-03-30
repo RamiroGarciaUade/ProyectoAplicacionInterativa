@@ -10,9 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.proyecto.uade.dieteticaYuyo.entity.User;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.UserRequest;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
-import com.proyecto.uade.dieteticaYuyo.model.User;
-import com.proyecto.uade.dieteticaYuyo.model.dto.UserRequest;
 import com.proyecto.uade.dieteticaYuyo.service.ServiceUser;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @RestController
 @RequestMapping("User")
-public class ControllerUser {
+public class UserController {
     @Autowired
     private ServiceUser userService;
 

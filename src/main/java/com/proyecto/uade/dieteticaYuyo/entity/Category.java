@@ -1,4 +1,4 @@
-package com.proyecto.uade.dieteticaYuyo.model;
+package com.proyecto.uade.dieteticaYuyo.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -18,8 +18,8 @@ public class Category {
     @Column
     private String name;
 
-    //@OneToOne(mappedBy = "category")
-    //private Product product;
+    @OneToOne(mappedBy = "category")
+    private Product product;
 
    
     
