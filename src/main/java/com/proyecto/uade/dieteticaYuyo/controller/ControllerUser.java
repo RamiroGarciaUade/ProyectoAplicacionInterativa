@@ -68,7 +68,7 @@ public class ControllerUser {
             // Intenta crear el usuario
             User createdUser = userService.createUser(user);
             // Respuesta exitosa
-            return ResponseEntity.ok(Map.of("username", createdUser.getSerName()));
+            return ResponseEntity.ok(Map.of("username", createdUser.getSurname()));
         } catch (UserDuplicateException e) {
             // Manejar la excepción y devolver un mensaje de error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -94,7 +94,7 @@ public class ControllerUser {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
 
-            existingUser.setSerName(updatedUser.getSerName());
+            existingUser.setSurname(updatedUser.getSurname());
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setDireccion(updatedUser.getDireccion());
