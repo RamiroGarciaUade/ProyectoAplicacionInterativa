@@ -1,14 +1,23 @@
 package com.proyecto.uade.dieteticaYuyo.entity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
+import lombok.Data;
+
+@Data
+@Entity
 public class Category {
     
     public Category() {
+    }
+
+    public Category(String description) {
+        this.description = description;
     }
 
     @Id
@@ -17,6 +26,9 @@ public class Category {
 
     @Column
     private String name;
+
+    @Column
+    private String description;
 
     @OneToOne(mappedBy = "category")
     private Product product;
