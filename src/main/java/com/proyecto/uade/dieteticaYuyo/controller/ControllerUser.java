@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @RestController
-@RequestMapping("User")
+@RequestMapping("Useres")
 public class ControllerUser {
     @Autowired
     private ServiceUser userService;
@@ -37,14 +37,14 @@ public class ControllerUser {
     }
 
     @GetMapping("/{id}")
-    public Optional getUserById (@PathVariable Long id) {
+    public Optional<User> getUserById (@PathVariable Long id) {
         return userService.getUserById(id);
 
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable String username) {
-        User user = userService.findByUsername(username);
+    public ResponseEntity<User> getUserByUserName(@PathVariable String userName) {
+        User user = userService.findByUsername(userName);
         if (user != null) {
             return ResponseEntity.ok(user);
         } else {
@@ -68,7 +68,7 @@ public class ControllerUser {
             // Intenta crear el usuario
             User createdUser = userService.createUser(user);
             // Respuesta exitosa
-            return ResponseEntity.ok(Map.of("username", createdUser.getSerName()));
+            return ResponseEntity.ok(Map.of("userName", createdUser.getUserName()));
         } catch (UserDuplicateException e) {
             // Manejar la excepción y devolver un mensaje de error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -78,7 +78,7 @@ public class ControllerUser {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
-        User user = userService.findByUsername(loginRequest.getSerName());
+        User user = userService.findByUsername(loginRequest.getUserName());
 
         if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.ok(user); // mal token
@@ -94,7 +94,7 @@ public class ControllerUser {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
 
-            existingUser.setSerName(updatedUser.getSerName());
+            existingUser.setUserName(updatedUser.getUserName());
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setDireccion(updatedUser.getDireccion());

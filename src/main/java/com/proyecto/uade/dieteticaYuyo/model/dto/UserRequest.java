@@ -3,7 +3,7 @@ import lombok.Data;
 
 @Data
 public class UserRequest {
-    private String serName;
+    private String userName;
     private String email;
     private String direccion;
     private String password; 

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
 import com.proyecto.uade.dieteticaYuyo.model.User;
-import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;;
+import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;
 
 @Service
 public class ServiceUserImpl implements ServiceUser{
@@ -28,7 +28,7 @@ public class ServiceUserImpl implements ServiceUser{
     }
     @Override
     public User findByUsername(String userName){
-        return userRepository.findByUsername(userName);
+        return userRepository.findByUserName(userName);
     }
     @Override
     public User findByEmail(String email){
@@ -40,7 +40,7 @@ public class ServiceUserImpl implements ServiceUser{
 
         if (existingUser.isPresent()) {
             User userToUpdate = existingUser.get();
-            userToUpdate.setSerName(user.getSerName());
+            userToUpdate.setUserName(user.getUserName());
             userToUpdate.setEmail(user.getEmail());
             userToUpdate.setPassword(user.getPassword());
             userToUpdate.setDireccion(user.getDireccion());
