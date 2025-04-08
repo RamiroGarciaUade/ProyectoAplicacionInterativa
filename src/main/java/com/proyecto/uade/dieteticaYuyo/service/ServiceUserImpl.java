@@ -69,4 +69,10 @@ public class ServiceUserImpl implements ServiceUser{
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe el usuario.");
         }
     }
+
+    // método de login (puede ir acá o en controller directamente)
+    public boolean validateLogin(String email, String password) {
+        User user = findByEmail(email);
+        return user != null && user.getPassword().equals(password);
+    }
 }
