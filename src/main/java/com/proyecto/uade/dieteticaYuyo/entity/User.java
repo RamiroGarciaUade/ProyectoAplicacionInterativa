@@ -29,6 +29,7 @@ public class User {
     @Column
     private String img;
 
-    @Column
-    private String rol;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<Role> roles;
+
 }
