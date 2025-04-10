@@ -15,14 +15,8 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/entity/User.java
-    @Column
-    private String surname;
-=======
     @Column(nullable = false)
     private String userName;
->>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/model/User.java
 
     @Column(nullable = false)
     private String email;

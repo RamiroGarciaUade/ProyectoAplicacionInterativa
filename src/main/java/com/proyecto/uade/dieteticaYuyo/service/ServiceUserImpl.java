@@ -11,12 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
-<<<<<<< HEAD
-import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;;
-=======
-import com.proyecto.uade.dieteticaYuyo.model.User;
 import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;
->>>>>>> Ramiro
 
 @Service
 public class ServiceUserImpl implements ServiceUser{
@@ -45,11 +40,8 @@ public class ServiceUserImpl implements ServiceUser{
 
         if (existingUser.isPresent()) {
             User userToUpdate = existingUser.get();
-<<<<<<< HEAD
-            userToUpdate.setSurname(user.getSurname());
-=======
+            
             userToUpdate.setUserName(user.getUserName());
->>>>>>> Ramiro
             userToUpdate.setEmail(user.getEmail());
             userToUpdate.setPassword(user.getPassword());
             userToUpdate.setDireccion(user.getDireccion());

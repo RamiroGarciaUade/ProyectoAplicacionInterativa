@@ -26,13 +26,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @RestController
-<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
 @RequestMapping("User")
 public class UserController {
-=======
-@RequestMapping("Useres")
-public class ControllerUser {
->>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
     @Autowired
     private ServiceUser userService;
 
@@ -73,11 +68,7 @@ public class ControllerUser {
             // Intenta crear el usuario
             User createdUser = userService.createUser(user);
             // Respuesta exitosa
-<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
-            return ResponseEntity.ok(Map.of("username", createdUser.getSurname()));
-=======
-            return ResponseEntity.ok(Map.of("userName", createdUser.getUserName()));
->>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
+            return ResponseEntity.ok(Map.of("username", createdUser.getUserName()));
         } catch (UserDuplicateException e) {
             // Manejar la excepción y devolver un mensaje de error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -102,12 +93,7 @@ public class ControllerUser {
 
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
-
-<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
-            existingUser.setSurname(updatedUser.getSurname());
-=======
             existingUser.setUserName(updatedUser.getUserName());
->>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setDireccion(updatedUser.getDireccion());

@@ -2,7 +2,7 @@ package com.proyecto.uade.dieteticaYuyo.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale.Category;
+import com.proyecto.uade.dieteticaYuyo.entity.Category;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
