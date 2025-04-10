@@ -26,8 +26,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 
 @RestController
+<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
 @RequestMapping("User")
 public class UserController {
+=======
+@RequestMapping("Useres")
+public class ControllerUser {
+>>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
     @Autowired
     private ServiceUser userService;
 
@@ -37,14 +42,14 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public Optional getUserById (@PathVariable Long id) {
+    public Optional<User> getUserById (@PathVariable Long id) {
         return userService.getUserById(id);
 
     }
 
     @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable String username) {
-        User user = userService.findByUsername(username);
+    public ResponseEntity<User> getUserByUserName(@PathVariable String userName) {
+        User user = userService.findByUsername(userName);
         if (user != null) {
             return ResponseEntity.ok(user);
         } else {
@@ -68,7 +73,11 @@ public class UserController {
             // Intenta crear el usuario
             User createdUser = userService.createUser(user);
             // Respuesta exitosa
+<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
             return ResponseEntity.ok(Map.of("username", createdUser.getSurname()));
+=======
+            return ResponseEntity.ok(Map.of("userName", createdUser.getUserName()));
+>>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
         } catch (UserDuplicateException e) {
             // Manejar la excepción y devolver un mensaje de error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -78,7 +87,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
-        User user = userService.findByUsername(loginRequest.getSerName());
+        User user = userService.findByUsername(loginRequest.getUserName());
 
         if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.ok(user); // mal token
@@ -94,7 +103,11 @@ public class UserController {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
 
+<<<<<<< HEAD:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/UserController.java
             existingUser.setSurname(updatedUser.getSurname());
+=======
+            existingUser.setUserName(updatedUser.getUserName());
+>>>>>>> Ramiro:src/main/java/com/proyecto/uade/dieteticaYuyo/controller/ControllerUser.java
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setDireccion(updatedUser.getDireccion());

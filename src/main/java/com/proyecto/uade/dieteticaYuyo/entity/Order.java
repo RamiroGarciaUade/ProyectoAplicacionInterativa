@@ -1,5 +1,7 @@
 package com.proyecto.uade.dieteticaYuyo.entity;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,9 +21,18 @@ public class Order {
     private Long id;
 
     @Column
-    private Long count;
+    private int numOrder;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column
+    private List<Product> products;
+
+    @Column
+    private Long count;
+
+    
 }
+
