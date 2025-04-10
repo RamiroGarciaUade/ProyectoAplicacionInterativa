@@ -73,6 +73,7 @@ public class ProductController {
             Product newProduct = new Product();
             newProduct.setDescription(productRequest.getDescription());
             newProduct.setPrice(productRequest.getPrice());
+            newProduct.setDiscount(productRequest.getDiscount());
             newProduct.setImages(productRequest.getImages());
             
             // Asignar categoría si se proporciona ID
@@ -98,6 +99,7 @@ public class ProductController {
 
             existingProduct.setDescription(productRequest.getDescription());
             existingProduct.setPrice(productRequest.getPrice());
+            existingProduct.setDiscount(productRequest.getDiscount());
             existingProduct.setImages(productRequest.getImages());
             
             // Actualizar categoría si se proporciona ID
