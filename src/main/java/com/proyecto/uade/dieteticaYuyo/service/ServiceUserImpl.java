@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
@@ -35,6 +36,7 @@ public class ServiceUserImpl implements ServiceUser{
         return userRepository.findByEmail(email);
     }
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<User> updateUser(User user){
         Optional<User> existingUser = userRepository.findById(user.getId());
 
@@ -55,11 +57,13 @@ public class ServiceUserImpl implements ServiceUser{
         }
     }
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public User createUser(User user) throws UserDuplicateException{
         User userCreate=userRepository.save(user);
         return userCreate;
     }
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<String> deleteUserById(Long id){
         Optional<User> user = userRepository.findById(id);
 

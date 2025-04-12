@@ -10,6 +10,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
@@ -41,6 +42,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<Product> updateProduct(Product product) {
         Optional<Product> existingProduct = productRepository.findById(product.getId());
 
@@ -61,6 +63,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public Product createProduct(Product product) throws ProductDuplicateException {
         // Verificar si ya existe un producto con la misma descripción
         Product existingProduct = productRepository.findByQualification(product.getQualification());
@@ -71,7 +74,9 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(product);
     }
 
+    
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<String> deleteProductById(Long id) {
         Optional<Product> product = productRepository.findById(id);
 

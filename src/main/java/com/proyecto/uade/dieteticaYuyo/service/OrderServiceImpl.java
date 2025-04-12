@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Order;
 import com.proyecto.uade.dieteticaYuyo.exceptions.OrderDuplicateException;
@@ -17,22 +18,28 @@ public class OrderServiceImpl implements OrderService{
     @Autowired
     private OrderRepository orderRepository;
 
+    @Override
     public List<Order> getOrders(){
         return orderRepository.findAll();
     }
 
+    @Override
     public Optional<Order> getOrderById(Long orderId){
         return orderRepository.findById(orderId);
     }
 
+    @Override
     public List<Order> findByUserEmail(String email){
         return orderRepository.findByUserEmail(email);
     }
 
+    @Override
     public Order findByNumOrder(int numOrder){
         return orderRepository.findByNumOrder(numOrder);
     }
 
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<Order> updateOrder(Order order){
         Optional<Order> existingOrder = orderRepository.findById(order.getId());
 
@@ -49,7 +56,8 @@ public class OrderServiceImpl implements OrderService{
             return ResponseEntity.notFound().build();
         }
     }
-
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
     public Order createOrder(Order order) throws OrderDuplicateException{
         // Verificar si ya existe un producto con la misma descripción
         Order existingOrder = orderRepository.findByNumOrder(order.getNumOrder());
@@ -59,7 +67,8 @@ public class OrderServiceImpl implements OrderService{
         
         return orderRepository.save(order);
     }
-
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<String> deleteOrderById(Long id){
         Optional<Order> order = orderRepository.findById(id);
 
