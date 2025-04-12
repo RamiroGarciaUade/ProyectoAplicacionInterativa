@@ -19,7 +19,7 @@ public interface ProductService {
 
     public Optional<Product> getProductById(Long productId);
 
-    public Product findByDescription(String description);
+    public Product findByQualification(String qualification);
 
     public ResponseEntity<Product> updateProduct(Product product);
 

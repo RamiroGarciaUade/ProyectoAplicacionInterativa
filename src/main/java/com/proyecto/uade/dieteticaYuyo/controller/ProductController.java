@@ -58,8 +58,8 @@ public class ProductController {
     }
 
     @GetMapping("/description/{description}")
-    public ResponseEntity<Product> getProductByDescription(@PathVariable String description) {
-        Product product = productService.findByDescription(description);
+    public ResponseEntity<Product> getProductByQualificationn(@PathVariable String description) {
+        Product product = productService.findByQualification(description);
         if (product != null) {
             return ResponseEntity.ok(product);
         } else {
@@ -71,6 +71,7 @@ public class ProductController {
     public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) {
         try {
             Product newProduct = new Product();
+            newProduct.setQualification(productRequest.getQualification());
             newProduct.setDescription(productRequest.getDescription());
             newProduct.setPrice(productRequest.getPrice());
             newProduct.setDiscount(productRequest.getDiscount());
@@ -96,7 +97,7 @@ public class ProductController {
 
         if (productOptional.isPresent()) {
             Product existingProduct = productOptional.get();
-
+            existingProduct.setQualification(productRequest.getQualification());
             existingProduct.setDescription(productRequest.getDescription());
             existingProduct.setPrice(productRequest.getPrice());
             existingProduct.setDiscount(productRequest.getDiscount());

@@ -6,5 +6,5 @@ import com.proyecto.uade.dieteticaYuyo.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    Product findByDescription(String description);
+    Product findByQualification(String qualification);
 } 

@@ -36,8 +36,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product findByDescription(String description) {
-        return productRepository.findByDescription(description);
+    public Product findByQualification(String qualification) {
+        return productRepository.findByQualification(qualification);
     }
 
     @Override
@@ -46,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
         if (existingProduct.isPresent()) {
             Product productToUpdate = existingProduct.get();
+            productToUpdate.setQualification(product.getQualification());
             productToUpdate.setDescription(product.getDescription());
             productToUpdate.setPrice(product.getPrice());
             productToUpdate.setImages(product.getImages());
@@ -62,7 +63,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product createProduct(Product product) throws ProductDuplicateException {
         // Verificar si ya existe un producto con la misma descripción
-        Product existingProduct = productRepository.findByDescription(product.getDescription());
+        Product existingProduct = productRepository.findByQualification(product.getQualification());
         if (existingProduct != null) {
             throw new ProductDuplicateException();
         }
