@@ -31,7 +31,7 @@ public class UserController {
     @Autowired
     private ServiceUser userService;
 
-    @GetMapping("/admin/")
+    @GetMapping("/admin")
     public List<User> getUsers() {
         return userService.getUsers();
     }

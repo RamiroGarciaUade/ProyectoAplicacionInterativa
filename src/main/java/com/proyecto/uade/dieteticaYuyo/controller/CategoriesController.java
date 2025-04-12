@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("categories")
+@RequestMapping("categorie")
 public class CategoriesController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping
+    @GetMapping("/categories")
     public ResponseEntity<Page<Category>> getCategories(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
