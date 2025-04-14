@@ -1,6 +1,5 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,31 +13,41 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
+import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
 import com.proyecto.uade.dieteticaYuyo.repository.ProductRepository;
 
 @Service
 public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Override
     public List<Product> getProducts() {
-        return (ArrayList<Product>) productRepository.findAll();
+        List<Product> products = productRepository.findAll();
+        return loadCategoriesInProducts(products);
     }
     
     @Override
     public Page<Product> getProductsPage(PageRequest pageRequest) {
-        return productRepository.findAll(pageRequest);
+        Page<Product> productsPage = productRepository.findAll(pageRequest);
+        productsPage.getContent().forEach(this::loadCategoryInProduct);
+        return productsPage;
     }
 
     @Override
     public Optional<Product> getProductById(Long productId) {
-        return productRepository.findById(productId);
+        Optional<Product> productOpt = productRepository.findById(productId);
+        productOpt.ifPresent(this::loadCategoryInProduct);
+        return productOpt;
     }
 
     @Override
     public Product findByQualification(String qualification) {
-        return productRepository.findByQualification(qualification);
+        Product product = productRepository.findByQualification(qualification);
+        return loadCategoryInProduct(product);
     }
 
     @Override
@@ -51,10 +60,12 @@ public class ProductServiceImpl implements ProductService {
             productToUpdate.setQualification(product.getQualification());
             productToUpdate.setDescription(product.getDescription());
             productToUpdate.setPrice(product.getPrice());
+            productToUpdate.setDiscount(product.getDiscount());
             productToUpdate.setImages(product.getImages());
-            productToUpdate.setCategory(product.getCategory());
+            productToUpdate.setCategoryId(product.getCategoryId());
 
             Product updatedProduct = productRepository.save(productToUpdate);
+            loadCategoryInProduct(updatedProduct);
 
             return ResponseEntity.ok(updatedProduct);
         } else {
@@ -65,16 +76,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public Product createProduct(Product product) throws ProductDuplicateException {
-        // Verificar si ya existe un producto con la misma descripción
         Product existingProduct = productRepository.findByQualification(product.getQualification());
         if (existingProduct != null) {
             throw new ProductDuplicateException();
         }
         
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+        return loadCategoryInProduct(savedProduct);
     }
 
-    
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public ResponseEntity<String> deleteProductById(Long id) {
@@ -86,5 +96,28 @@ public class ProductServiceImpl implements ProductService {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe el producto.");
         }
+    }
+    
+    @Override
+    public Product loadCategoryInProduct(Product product) {
+        if (product != null && product.getCategoryId() != null) {
+            categoryRepository.findById(product.getCategoryId())
+                .ifPresent(product::setCategory);
+        }
+        return product;
+    }
+    
+    @Override
+    public List<Product> loadCategoriesInProducts(List<Product> products) {
+        if (products != null) {
+            products.forEach(this::loadCategoryInProduct);
+        }
+        return products;
+    }
+    
+    @Override
+    public List<Product> findProductsByCategoryId(Long categoryId) {
+        List<Product> products = productRepository.findByCategoryId(categoryId);
+        return loadCategoriesInProducts(products);
     }
 } 
