@@ -26,4 +26,10 @@ public interface ProductService {
     public Product createProduct(Product product) throws ProductDuplicateException;
     
     public ResponseEntity<String> deleteProductById(Long id);
+    
+    public Product loadCategoryInProduct(Product product);
+    
+    public List<Product> loadCategoriesInProducts(List<Product> products);
+    
+    public List<Product> findProductsByCategoryId(Long categoryId);
 } 
