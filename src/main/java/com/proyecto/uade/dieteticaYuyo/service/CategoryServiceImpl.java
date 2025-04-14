@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Category;
-import com.proyecto.uade.dieteticaYuyo.entity.Order;
 import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
 
