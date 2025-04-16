@@ -19,19 +19,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("categories")
+@RequestMapping("categorie")
 public class CategoriesController {
     @Autowired
     private CategoryService categoryService;
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<Page<Category>> getCategories(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size) {
         return ResponseEntity.ok(categoryService.getCategories(PageRequest.of(page, size)));
     }
     
-    @GetMapping("/all")
+    @GetMapping("/categories")
     public List<Category> getAllCategories() {
         return categoryService.getAllCategories();
     }
@@ -65,7 +65,7 @@ public class CategoriesController {
         return ResponseEntity.ok(products);
     }
 
-    @PostMapping
+    @PutMapping("/CreateCategory")
     public ResponseEntity<?> createCategory(@RequestBody CategoryRequest categoryRequest)
             throws CategoryDuplicateException {
         try {
@@ -81,8 +81,8 @@ public class CategoriesController {
         }
     }
     
-    @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody CategoryRequest categoryRequest) {
+    @PostMapping("/EditCategory/{id}")
+    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody  CategoryRequest categoryRequest) {
         Optional<Category> categoryOptional = categoryService.getCategoryById(id);
 
         if (categoryOptional.isPresent()) {
@@ -97,7 +97,7 @@ public class CategoriesController {
         }
     }
     
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/DeleteCategory/{id}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
         return categoryService.deleteCategoryById(id);
     }

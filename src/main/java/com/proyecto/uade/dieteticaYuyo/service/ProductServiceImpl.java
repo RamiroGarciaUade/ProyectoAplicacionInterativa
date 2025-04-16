@@ -24,6 +24,9 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private CategoryService categoryService;
+
     @Override
     public List<Product> getProducts() {
         List<Product> products = productRepository.findAll();
@@ -75,14 +78,18 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product createProduct(Product product) throws ProductDuplicateException {
-        Product existingProduct = productRepository.findByQualification(product.getQualification());
-        if (existingProduct != null) {
-            throw new ProductDuplicateException();
-        }
-        
-        Product savedProduct = productRepository.save(product);
-        return loadCategoryInProduct(savedProduct);
+    public Product createProduct(Product product) throws ProductDuplicateException { //! ERROR FATAL
+         // Verificar duplicado
+         Product existingProduct = productRepository.findByQualification(product.getQualification());
+         if (existingProduct != null) {
+             throw new ProductDuplicateException();
+         }
+ 
+         // Guardar producto (Spring JPA automáticamente guarda las imágenes en la tabla secundaria)
+         Product savedProduct = productRepository.save(product);
+ 
+         // Si querés devolver el producto con la categoría cargada
+         return loadCategoryInProduct(savedProduct);
     }
 
     @Override
