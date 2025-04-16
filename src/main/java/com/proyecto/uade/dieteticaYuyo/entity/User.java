@@ -2,6 +2,8 @@ package com.proyecto.uade.dieteticaYuyo.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -10,7 +12,7 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name="usuario")
+@Table(name="users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,14 +32,8 @@ public class User {
     @Column(nullable = false)
     private String img;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String rol;
-
-    public void setRole(String rol) {
-        if (!rol.equals("ADMIN") && !rol.equals("USER")) {
-            throw new IllegalArgumentException("El rol debe ser 'ADMIN' o 'USER'.");
-        }
-        this.rol = rol;
-    }
+    private Role rol;
     
 }
