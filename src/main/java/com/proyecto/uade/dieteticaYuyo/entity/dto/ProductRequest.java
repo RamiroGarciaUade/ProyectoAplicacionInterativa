@@ -1,6 +1,8 @@
 package com.proyecto.uade.dieteticaYuyo.entity.dto;
-import java.util.ArrayList;
+
 import java.util.List;
+
+import com.proyecto.uade.dieteticaYuyo.entity.Category;
 
 import lombok.Data;
 
@@ -10,6 +12,7 @@ public class ProductRequest {
     private String description;
     private Double price;
     private Double discount;
-    private List<String> images = new ArrayList<>();
     private Long categoryId;
+    private Category category;
+    private List<String> images;
 } 

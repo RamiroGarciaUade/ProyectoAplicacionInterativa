@@ -57,9 +57,9 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/description/{description}")
-    public ResponseEntity<Product> getProductByQualificationn(@PathVariable String description) {
-        Product product = productService.findByQualification(description);
+    @GetMapping("/qualification/{qualification}")
+    public ResponseEntity<Product> getProductByQualification(@PathVariable String qualification) {
+        Product product = productService.findByQualification(qualification);
         if (product != null) {
             return ResponseEntity.ok(product);
         } else {
@@ -67,32 +67,38 @@ public class ProductController {
         }
     }
 
-    @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) {
+    @PutMapping("/CreateProduct")
+    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) { 
         try {
             Product newProduct = new Product();
             newProduct.setQualification(productRequest.getQualification());
             newProduct.setDescription(productRequest.getDescription());
             newProduct.setPrice(productRequest.getPrice());
             newProduct.setDiscount(productRequest.getDiscount());
-            newProduct.setImages(productRequest.getImages());
-            
-            // Asignar categoría si se proporciona ID
+
+            // Asignar categoría si se proporciona
             if (productRequest.getCategoryId() != null) {
                 categoryService.getCategoryById(productRequest.getCategoryId())
                     .ifPresent(newProduct::setCategory);
             }
-            
+
+            // Asignar imágenes directamente (ya son Strings)
+            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
+                newProduct.setImages(productRequest.getImages());
+            }
+
+            // Guardar producto
             Product createdProduct = productService.createProduct(newProduct);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+
         } catch (ProductDuplicateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "El producto ya existe"));
         }
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {
+    @PostMapping("/EditProduct/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {  //! 
         Optional<Product> productOptional = productService.getProductById(id);
 
         if (productOptional.isPresent()) {
@@ -101,12 +107,18 @@ public class ProductController {
             existingProduct.setDescription(productRequest.getDescription());
             existingProduct.setPrice(productRequest.getPrice());
             existingProduct.setDiscount(productRequest.getDiscount());
-            existingProduct.setImages(productRequest.getImages());
+            //existingProduct.setImages(productRequest.getImages());
             
             // Actualizar categoría si se proporciona ID
             if (productRequest.getCategoryId() != null) {
                 categoryService.getCategoryById(productRequest.getCategoryId())
                     .ifPresent(existingProduct::setCategory);
+            }
+
+           // Actualizar las imágenes (sobreescribir las existentes)
+            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
+                existingProduct.getImages().clear(); // Eliminar las imágenes actuales
+                existingProduct.getImages().addAll(productRequest.getImages()); // Agregar las nuevas URLs
             }
 
             Product updatedProduct = productService.updateProduct(existingProduct).getBody();
@@ -116,7 +128,7 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("DeleteProduct/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
         return productService.deleteProductById(id);
     }
