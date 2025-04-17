@@ -24,6 +24,4 @@ public interface ServiceUser {
     public User createUser(User user) throws UserDuplicateException;
 
     public ResponseEntity<String> deleteUserById(Long id);
-
-    public boolean validateLogin(String email, String password);
 }

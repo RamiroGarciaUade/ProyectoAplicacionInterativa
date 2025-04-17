@@ -31,20 +31,20 @@ public class UserController {
     @Autowired
     private ServiceUser userService;
 
-    @GetMapping("/admin/")
+    @GetMapping("/admin")
     public List<User> getUsers() {
         return userService.getUsers();
     }
 
     @GetMapping("/{id}")
-    public Optional getUserById (@PathVariable Long id) {
+    public Optional<User> getUserById (@PathVariable Long id) {
         return userService.getUserById(id);
 
     }
 
-    @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable String username) {
-        User user = userService.findByUsername(username);
+    @GetMapping("/username/{userName}")
+    public ResponseEntity<User> getUserByUserName(@PathVariable("userName") String userName) {
+        User user = userService.findByUsername(userName);
         if (user != null) {
             return ResponseEntity.ok(user);
         } else {
@@ -52,8 +52,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByUserEmail(@PathVariable String email) {
+    @GetMapping("/email/{Email}")
+    public ResponseEntity<User> getUserByUserEmail(@PathVariable("Email") String email) {
         User user = userService.findByEmail(email);
         if (user != null) {
             return ResponseEntity.ok(user);
@@ -62,13 +62,13 @@ public class UserController {
         }
     }
 
-    @PostMapping("/Register")
+    @PutMapping("/Register")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
             // Intenta crear el usuario
             User createdUser = userService.createUser(user);
             // Respuesta exitosa
-            return ResponseEntity.ok(Map.of("username", createdUser.getSurname()));
+            return ResponseEntity.ok(Map.of("username", createdUser.getUserName()));
         } catch (UserDuplicateException e) {
             // Manejar la excepción y devolver un mensaje de error
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -76,9 +76,9 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login")
+    @GetMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
-        User user = userService.findByUsername(loginRequest.getSerName());
+        User user = userService.findByUsername(loginRequest.getUserName());
 
         if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.ok(user); // mal token
@@ -87,14 +87,13 @@ public class UserController {
         }
     }
 
-    @PutMapping("/EditUser/{id}")
+    @PostMapping("/EditUser/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Optional<User> userOptional = userService.getUserById(id);
 
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
-
-            existingUser.setSurname(updatedUser.getSurname());
+            existingUser.setUserName(updatedUser.getUserName());
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setPassword(updatedUser.getPassword());
             existingUser.setDireccion(updatedUser.getDireccion());
