@@ -28,11 +28,11 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @GetMapping("/orders")
+    @GetMapping("/all")
     public List<Order> getOrders(){
         return orderService.getOrders();
     }
-    @GetMapping("/order/{orderId}")
+    @GetMapping("/{orderId}")
     public Optional<Order> getOrderById(@PathVariable Long orderId){
         return orderService.getOrderById(orderId);
     }
@@ -45,7 +45,7 @@ public class OrderController {
         return orderService.findByNumOrder(numOrder);
     }
 
-    @PutMapping("/EditOrder/{id}")
+    @PostMapping("/EditOrder/{id}")
     public ResponseEntity<Order> updateOrder(@PathVariable Long id , Order updatedOrder){
         Optional<Order> orderOptional = orderService.getOrderById(id);
 
@@ -63,7 +63,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
-    @PostMapping("/createOrder")
+    @PutMapping("/createOrder")
     public ResponseEntity<?> createOrder(@RequestBody Order order) throws OrderDuplicateException{
          try {
             // Intenta crear el order

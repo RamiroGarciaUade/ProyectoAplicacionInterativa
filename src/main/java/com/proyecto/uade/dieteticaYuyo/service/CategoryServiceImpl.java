@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -21,15 +22,16 @@ import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
 public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
-    
+
     @Autowired
+    @Lazy
     private ProductService productService;
 
     @Override
     public Page<Category> getCategories(PageRequest pageable) {
         return categoryRepository.findAll(pageable);
     }
-    
+
     @Override
     public List<Category> getAllCategories() {
         return (ArrayList<Category>) categoryRepository.findAll();
@@ -39,7 +41,7 @@ public class CategoryServiceImpl implements CategoryService {
     public Optional<Category> getCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId);
     }
-    
+
     @Override
     public List<Category> findByDescription(String description) {
         return categoryRepository.findByDescription(description);
@@ -85,7 +87,7 @@ public class CategoryServiceImpl implements CategoryService {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe esta categoría.");
         }
     }
-    
+
     @Override
     public List<Product> getProductsByCategory(Long categoryId) {
         return productService.findProductsByCategoryId(categoryId);

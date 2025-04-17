@@ -42,8 +42,8 @@ public class UserController {
 
     }
 
-    @GetMapping("/username/{username}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable String userName) {
+    @GetMapping("/username/{userName}")
+    public ResponseEntity<User> getUserByUserName(@PathVariable("userName") String userName) {
         User user = userService.findByUsername(userName);
         if (user != null) {
             return ResponseEntity.ok(user);
@@ -52,8 +52,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<User> getUserByUserEmail(@PathVariable String email) {
+    @GetMapping("/email/{Email}")
+    public ResponseEntity<User> getUserByUserEmail(@PathVariable("Email") String email) {
         User user = userService.findByEmail(email);
         if (user != null) {
             return ResponseEntity.ok(user);
@@ -62,7 +62,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/Register")
+    @PutMapping("/Register")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
             // Intenta crear el usuario
@@ -76,7 +76,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login")
+    @GetMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
         User user = userService.findByUsername(loginRequest.getUserName());
 
@@ -87,7 +87,7 @@ public class UserController {
         }
     }
 
-    @PutMapping("/EditUser/{id}")
+    @PostMapping("/EditUser/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Optional<User> userOptional = userService.getUserById(id);
 
