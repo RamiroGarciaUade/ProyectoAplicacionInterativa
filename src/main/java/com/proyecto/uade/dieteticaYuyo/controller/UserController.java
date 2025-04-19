@@ -1,84 +1,73 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
-
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Role;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.LoginRequest;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.UserRequestDTO;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.proyecto.uade.dieteticaYuyo.entity.User;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.UserRequest;
-import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
-import com.proyecto.uade.dieteticaYuyo.service.ServiceUser;
-
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-
+import com.proyecto.uade.dieteticaYuyo.service.UserService;
 
 @RestController
-@RequestMapping("User")
+@RequestMapping("users")
 public class UserController {
     @Autowired
-    private ServiceUser userService;
+    private UserService userService;
 
-    @GetMapping("/admin")
-    public List<User> getUsers() {
-        return userService.getUsers();
+    // GET /users
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<User> users = userService.getUsers();
+        List<UserResponseDTO> userDTOs = users.stream()
+                .map(UserResponseDTO::fromUser)
+                .toList();
+
+        return ResponseEntity.ok(userDTOs);
     }
 
+    // GET /users/{id}
     @GetMapping("/{id}")
-    public Optional<User> getUserById (@PathVariable Long id) {
-        return userService.getUserById(id);
-
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
-    @GetMapping("/username/{userName}")
-    public ResponseEntity<User> getUserByUserName(@PathVariable("userName") String userName) {
-        User user = userService.findByUsername(userName);
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    // GET /users/username/{username}
+    @GetMapping("/username/{username}")
+    public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
+        User user = userService.getUserByUsername(username);
+        return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
-    @GetMapping("/email/{Email}")
-    public ResponseEntity<User> getUserByUserEmail(@PathVariable("Email") String email) {
-        User user = userService.findByEmail(email);
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    // POST /users
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody UserRequestDTO requestDTO) {
+        User newUser = User.builder()
+                .username(requestDTO.getUsername())
+                .email(requestDTO.getEmail())
+                .address(requestDTO.getAddress())
+                .password(requestDTO.getPassword())
+                .imageUrl(requestDTO.getImageUrl())
+                .role(Role.USER) // Default role
+                .build();
+
+        User savedUser = userService.createUser(newUser);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of("message", "Usuario " + savedUser.getUsername() + " creado con éxito"));
     }
 
-    @PutMapping("/Register")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
-        try {
-            // Intenta crear el usuario
-            User createdUser = userService.createUser(user);
-            // Respuesta exitosa
-            return ResponseEntity.ok(Map.of("username", createdUser.getUserName()));
-        } catch (UserDuplicateException e) {
-            // Manejar la excepción y devolver un mensaje de error
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
-        User user = userService.findByUsername(loginRequest.getUserName());
+    //TODO: Refactor and move to a new Auth controller class
+    @GetMapping("auth/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        User user = userService.getUserByUsername(loginRequest.getUsername());
 
         if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
             return ResponseEntity.ok(user); // mal token
@@ -87,27 +76,27 @@ public class UserController {
         }
     }
 
-    @PostMapping("/EditUser/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        Optional<User> userOptional = userService.getUserById(id);
+    // PUT /users/{id}
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
+        User existingUser = userService.getUserById(id);
 
-        if (userOptional.isPresent()) {
-            User existingUser = userOptional.get();
-            existingUser.setUserName(updatedUser.getUserName());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setPassword(updatedUser.getPassword());
-            existingUser.setDireccion(updatedUser.getDireccion());
-            existingUser.setImg(updatedUser.getImg());
-            User savedUser = userService.updateUser(existingUser).getBody();
+        existingUser.setUsername(requestDTO.getUsername());
+        existingUser.setEmail(requestDTO.getEmail());
+        existingUser.setAddress(requestDTO.getAddress());
+        existingUser.setPassword(requestDTO.getPassword());
+        existingUser.setImageUrl(requestDTO.getImageUrl());
 
-            return ResponseEntity.ok(savedUser);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        User updatedUser = userService.updateUser(existingUser);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Map.of("message", "Usuario " + updatedUser.getUsername() + " actualizado con éxito"));
     }
 
-    @DeleteMapping("/DeleteUser/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        return userService.deleteUserById(id);
+    // DELETE /users/{id}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.ok(Map.of("message", "Usuario eliminado con éxito"));
     }
 }

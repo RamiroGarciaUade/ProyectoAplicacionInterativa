@@ -9,7 +9,7 @@ import com.proyecto.uade.dieteticaYuyo.entity.dto.OrderRequest;
 import com.proyecto.uade.dieteticaYuyo.exceptions.OrderDuplicateException;
 import com.proyecto.uade.dieteticaYuyo.service.OrderService;
 import com.proyecto.uade.dieteticaYuyo.service.ProductService;
-import com.proyecto.uade.dieteticaYuyo.service.ServiceUser;
+import com.proyecto.uade.dieteticaYuyo.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class OrderController {
     private OrderService orderService;
 
     @Autowired
-    private ServiceUser userService;
+    private UserService userService;
 
     @Autowired
     private ProductService productService;
@@ -60,7 +60,7 @@ public class OrderController {
         return orderService.findByNumOrder(numOrder);
     }
 
-    @PutMapping("/EditOrder/{id}")
+/*    @PutMapping("/EditOrder/{id}")
     public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody OrderRequest orderRequest) {
         Optional<Order> orderOptional = orderService.getOrderById(id);
 
@@ -104,9 +104,9 @@ public class OrderController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    }
+    }*/
 
-    @PostMapping("/createOrder")
+/*    @PostMapping("/createOrder")
     public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest) {
         try {
             Order newOrder = new Order();
@@ -162,7 +162,7 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error al crear la orden: " + e.getMessage()));
         }
-    }
+    }*/
 
     @DeleteMapping("/DeleteOrder/{id}")
     public ResponseEntity<String> deleteOrderById(@PathVariable Long id) {

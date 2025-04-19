@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductRequest;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductDTO;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
 import com.proyecto.uade.dieteticaYuyo.service.ProductService;
 import com.proyecto.uade.dieteticaYuyo.service.CategoryService;
@@ -68,23 +68,23 @@ public class ProductController {
     }
 
     @PutMapping("/CreateProduct")
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) { 
+    public ResponseEntity<?> createProduct(@RequestBody ProductDTO productDTO) {
         try {
             Product newProduct = new Product();
-            newProduct.setQualification(productRequest.getQualification());
-            newProduct.setDescription(productRequest.getDescription());
-            newProduct.setPrice(productRequest.getPrice());
-            newProduct.setDiscount(productRequest.getDiscount());
+            newProduct.setQualification(productDTO.getQualification());
+            newProduct.setDescription(productDTO.getDescription());
+            newProduct.setPrice(productDTO.getPrice());
+            newProduct.setDiscount(productDTO.getDiscount());
 
             // Asignar categoría si se proporciona
-            if (productRequest.getCategoryId() != null) {
-                categoryService.getCategoryById(productRequest.getCategoryId())
+            if (productDTO.getCategoryId() != null) {
+                categoryService.getCategoryById(productDTO.getCategoryId())
                     .ifPresent(newProduct::setCategory);
             }
 
             // Asignar imágenes directamente (ya son Strings)
-            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
-                newProduct.setImages(productRequest.getImages());
+            if (productDTO.getImages() != null && !productDTO.getImages().isEmpty()) {
+                newProduct.setImages(productDTO.getImages());
             }
 
             // Guardar producto
@@ -98,27 +98,27 @@ public class ProductController {
     }
 
     @PostMapping("/EditProduct/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {  //! 
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductDTO productDTO) {  //!
         Optional<Product> productOptional = productService.getProductById(id);
 
         if (productOptional.isPresent()) {
             Product existingProduct = productOptional.get();
-            existingProduct.setQualification(productRequest.getQualification());
-            existingProduct.setDescription(productRequest.getDescription());
-            existingProduct.setPrice(productRequest.getPrice());
-            existingProduct.setDiscount(productRequest.getDiscount());
+            existingProduct.setQualification(productDTO.getQualification());
+            existingProduct.setDescription(productDTO.getDescription());
+            existingProduct.setPrice(productDTO.getPrice());
+            existingProduct.setDiscount(productDTO.getDiscount());
             //existingProduct.setImages(productRequest.getImages());
             
             // Actualizar categoría si se proporciona ID
-            if (productRequest.getCategoryId() != null) {
-                categoryService.getCategoryById(productRequest.getCategoryId())
+            if (productDTO.getCategoryId() != null) {
+                categoryService.getCategoryById(productDTO.getCategoryId())
                     .ifPresent(existingProduct::setCategory);
             }
 
            // Actualizar las imágenes (sobreescribir las existentes)
-            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
+            if (productDTO.getImages() != null && !productDTO.getImages().isEmpty()) {
                 existingProduct.getImages().clear(); // Eliminar las imágenes actuales
-                existingProduct.getImages().addAll(productRequest.getImages()); // Agregar las nuevas URLs
+                existingProduct.getImages().addAll(productDTO.getImages()); // Agregar las nuevas URLs
             }
 
             Product updatedProduct = productService.updateProduct(existingProduct).getBody();
