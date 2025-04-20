@@ -9,11 +9,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
 import lombok.Data;
 
 @Data
 @Entity
+@Table(name="product")
 public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,22 +35,14 @@ public class Product {
     @Column(nullable = false)
     private Double discount;
 
+    @Column(nullable = false)
+    private Integer stock;
+
     @ElementCollection
     @Column(name = "image_url")
     private List<String> images = new ArrayList<>();
-
-    @Column(name = "category_id")
-    private Long categoryId;
     
-    @Transient
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
-    
-    public Category getCategory() {
-        return category;
-    }
-    
-    public void setCategory(Category category) {
-        this.category = category;
-        this.categoryId = (category != null) ? category.getId() : null;
-    }
 }

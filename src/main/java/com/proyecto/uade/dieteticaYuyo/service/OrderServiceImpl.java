@@ -64,7 +64,6 @@ public class OrderServiceImpl implements OrderService{
         if (existingOrder != null) {
             throw new OrderDuplicateException();
         }
-        
         return orderRepository.save(order);
     }
     @Override

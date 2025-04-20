@@ -6,6 +6,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,13 +25,13 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private int numOrder;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
+    
     @ManyToMany
     @JoinTable(
         name = "order_products",
@@ -39,7 +40,7 @@ public class Order {
     )
     private List<Product> products = new ArrayList<>();
 
-    @Column
-    private Long count;
+    @Column(nullable = false)
+    private Double total_price;
 }
 

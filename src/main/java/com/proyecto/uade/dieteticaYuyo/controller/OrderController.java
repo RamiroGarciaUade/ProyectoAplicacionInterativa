@@ -61,7 +61,7 @@ public class OrderController {
     }
 
     @PutMapping("/EditOrder/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody OrderRespond orderRequest) {
         Optional<Order> orderOptional = orderService.getOrderById(id);
 
         if (orderOptional.isPresent()) {
@@ -107,7 +107,7 @@ public class OrderController {
     }
 
     @PostMapping("/createOrder")
-    public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestBody OrderRespond orderRequest) {
         try {
             Order newOrder = new Order();
             newOrder.setNumOrder(orderRequest.getNumOrder());

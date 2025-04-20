@@ -1,17 +1,15 @@
-package com.proyecto.uade.dieteticaYuyo.entity.dto;
+package com.proyecto.uade.dieteticaYuyo.entity.dto.respond;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
-import com.proyecto.uade.dieteticaYuyo.entity.User;
 
 import lombok.Data;
 
 @Data
-public class OrderRequest {
+public class OrderRespond {
     private int numOrder;
-    private User user;
     private List<Product> products = new ArrayList<>();
-    private Long count;
+    private Double total_price;
 }

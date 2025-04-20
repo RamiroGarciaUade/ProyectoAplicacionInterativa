@@ -1,16 +1,23 @@
 package com.proyecto.uade.dieteticaYuyo.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name="usuario")
+@Table(name="user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,14 +37,15 @@ public class User {
     @Column(nullable = false)
     private String img;
 
-    @Column(nullable = false)
-    private String rol;
+    @Enumerated(EnumType.STRING)
+    /*
+     *  `EnumType.STRING`: guarda el nombre del enum en la base de datos (por ejemplo `"ADMIN"`).
+     Sin esto, por defecto se usa `EnumType.ORDINAL`, que guarda el índice (0, 1, 2...), lo cual 
+     **no es recomendable** porque rompe si cambias el orden de los valores del enum.
+     */
+    private Role rol;
 
-    public void setRole(String rol) {
-        if (!rol.equals("ADMIN") && !rol.equals("USER")) {
-            throw new IllegalArgumentException("El rol debe ser 'ADMIN' o 'USER'.");
-        }
-        this.rol = rol;
-    }
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Order> orders=new ArrayList<>();
     
 }

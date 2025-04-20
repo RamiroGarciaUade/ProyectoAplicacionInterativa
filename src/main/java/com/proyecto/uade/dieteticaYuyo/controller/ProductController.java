@@ -68,7 +68,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) {
+    public ResponseEntity<?> createProduct(@RequestBody ProductRespond productRequest) {
         try {
             Product newProduct = new Product();
             newProduct.setQualification(productRequest.getQualification());
@@ -92,7 +92,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRespond productRequest) {
         Optional<Product> productOptional = productService.getProductById(id);
 
         if (productOptional.isPresent()) {

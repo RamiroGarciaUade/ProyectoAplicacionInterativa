@@ -1,9 +1,8 @@
 package com.proyecto.uade.dieteticaYuyo.entity;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.Embeddable;
 
-
-@Entity
+@Embeddable
 public enum  Role {
     USER,ADMIN
 }
