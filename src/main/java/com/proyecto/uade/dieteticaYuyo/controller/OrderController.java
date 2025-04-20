@@ -20,10 +20,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("order")
+@RequestMapping("/orders")
 public class OrderController {
     @Autowired
     private OrderService orderService;
@@ -37,33 +38,29 @@ public class OrderController {
         return orderService.getOrderById(orderId);
     }
     @GetMapping("/email/{email}")
-    public List<Order> findByUserEmail(String email){
+    public List<Order> findByUserEmail(@PathVariable String email) {
         return orderService.findByUserEmail(email);
     }
     @GetMapping("/numOrder/{numOrder}")
-    public Order findByNumOrder(int numOrder){
+    public Order findByNumOrder(@PathVariable int numOrder){
         return orderService.findByNumOrder(numOrder);
     }
 
-    @PostMapping("/EditOrder/{id}")
-    public ResponseEntity<Order> updateOrder(@PathVariable Long id , Order updatedOrder){
-        Optional<Order> orderOptional = orderService.getOrderById(id);
-
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order updatedOrder) {
+    Optional<Order> orderOptional = orderService.getOrderById(id);
         if (orderOptional.isPresent()) {
-            Order existingOrder= orderOptional.get();
+            Order existingOrder = orderOptional.get();
             existingOrder.setNumOrder(updatedOrder.getNumOrder());
             existingOrder.setProducts(updatedOrder.getProducts());
             existingOrder.setUser(updatedOrder.getUser());
             existingOrder.setCount(updatedOrder.getCount());
 
-            Order savedOrder = orderService.updateOrder(existingOrder).getBody();
-
-            return ResponseEntity.ok(savedOrder);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.ok(orderService.updateOrder(existingOrder).getBody());
         }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
-    @PutMapping("/createOrder")
+    @PostMapping("/")
     public ResponseEntity<?> createOrder(@RequestBody Order order) throws OrderDuplicateException{
          try {
             // Intenta crear el order
@@ -76,7 +73,7 @@ public class OrderController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-    @DeleteMapping("/DeleteOrder/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOrderById(Long id){
         return orderService.deleteOrderById(id);
     }

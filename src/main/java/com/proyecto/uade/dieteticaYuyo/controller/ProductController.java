@@ -67,7 +67,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping("/CreateProduct")
+    @PostMapping("/")
     public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) { 
         try {
             Product newProduct = new Product();
@@ -97,36 +97,30 @@ public class ProductController {
         }
     }
 
-    @PostMapping("/EditProduct/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest productRequest) {  //! 
-        Optional<Product> productOptional = productService.getProductById(id);
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
+    Optional<Product> productOptional = productService.getProductById(id);
+    if (productOptional.isPresent()) {
+        Product existingProduct = productOptional.get();
+        existingProduct.setQualification(request.getQualification());
+        existingProduct.setDescription(request.getDescription());
+        existingProduct.setPrice(request.getPrice());
+        existingProduct.setDiscount(request.getDiscount());
 
-        if (productOptional.isPresent()) {
-            Product existingProduct = productOptional.get();
-            existingProduct.setQualification(productRequest.getQualification());
-            existingProduct.setDescription(productRequest.getDescription());
-            existingProduct.setPrice(productRequest.getPrice());
-            existingProduct.setDiscount(productRequest.getDiscount());
-            //existingProduct.setImages(productRequest.getImages());
-            
-            // Actualizar categoría si se proporciona ID
-            if (productRequest.getCategoryId() != null) {
-                categoryService.getCategoryById(productRequest.getCategoryId())
-                    .ifPresent(existingProduct::setCategory);
-            }
-
-           // Actualizar las imágenes (sobreescribir las existentes)
-            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
-                existingProduct.getImages().clear(); // Eliminar las imágenes actuales
-                existingProduct.getImages().addAll(productRequest.getImages()); // Agregar las nuevas URLs
-            }
-
-            Product updatedProduct = productService.updateProduct(existingProduct).getBody();
-            return ResponseEntity.ok(updatedProduct);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        if (request.getCategoryId() != null) {
+            categoryService.getCategoryById(request.getCategoryId())
+                .ifPresent(existingProduct::setCategory);
         }
+
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            existingProduct.setImages(request.getImages());
+        }
+
+        return productService.updateProduct(existingProduct);
     }
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
 
     @DeleteMapping("DeleteProduct/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {

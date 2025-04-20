@@ -76,7 +76,7 @@ public class UserController {
         }
     }
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody UserRequest loginRequest) {
         User user = userService.findByUsername(loginRequest.getUserName());
 
