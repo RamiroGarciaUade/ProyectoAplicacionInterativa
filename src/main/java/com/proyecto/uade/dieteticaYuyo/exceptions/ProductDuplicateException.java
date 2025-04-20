@@ -3,7 +3,9 @@ package com.proyecto.uade.dieteticaYuyo.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(code = HttpStatus.BAD_REQUEST, reason = "El producto ya existe")
-public class ProductDuplicateException extends Exception {
-
-} 
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class ProductDuplicateException extends RuntimeException {
+    public ProductDuplicateException(String name) {
+        super("El producto con el nombre '" + name + "' ya existe.");
+    }
+}

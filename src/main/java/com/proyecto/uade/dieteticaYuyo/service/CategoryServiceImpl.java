@@ -22,13 +22,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    @Lazy
-    private ProductService productService;
-
     @Override
-    public Page<Category> getPagedCategories(PageRequest pageable) {
-        return categoryRepository.findAll(pageable);
+    public Page<Category> getPagedCategories(PageRequest pageRequest) {
+        return categoryRepository.findAll(pageRequest);
     }
 
     @Override
@@ -59,7 +55,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Category updateCategory(Category updatedCategory) {
+    public Category updateCategory(Category updatedCategory) throws CategoryDuplicateException {
         Category existingCategory = getCategoryById(updatedCategory.getId());
         if (categoryRepository.existsByName(updatedCategory.getName()) &&
                 !existingCategory.getName().equals(updatedCategory.getName())) {

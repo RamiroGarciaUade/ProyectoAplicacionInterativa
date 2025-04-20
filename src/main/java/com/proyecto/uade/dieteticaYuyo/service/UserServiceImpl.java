@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public User updateUser(User updatedUser) {
+    public User updateUser(User updatedUser) throws UserDuplicateException {
         User existingUser = getUserById(updatedUser.getId());
         if (userRepository.existsByUsername(updatedUser.getUsername()) &&
                 !existingUser.getUsername().equals(updatedUser.getUsername())) {

@@ -1,19 +1,18 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
+import com.proyecto.uade.dieteticaYuyo.exceptions.ProductNotFoundException;
+import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
-import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
 import com.proyecto.uade.dieteticaYuyo.repository.ProductRepository;
 
 @Service
@@ -24,107 +23,72 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private CategoryService categoryService;
-
     @Override
-    public List<Product> getProducts() {
-        List<Product> products = productRepository.findAll();
-        return loadCategoriesInProducts(products);
-    }
-    
-    @Override
-    public Page<Product> getProductsPage(PageRequest pageRequest) {
-        Page<Product> productsPage = productRepository.findAll(pageRequest);
-        productsPage.getContent().forEach(this::loadCategoryInProduct);
-        return productsPage;
+    public Page<Product> getPagedProducts(PageRequest pageRequest) {
+        return productRepository.findAll(pageRequest);
     }
 
     @Override
-    public Optional<Product> getProductById(Long productId) {
-        Optional<Product> productOpt = productRepository.findById(productId);
-        productOpt.ifPresent(this::loadCategoryInProduct);
-        return productOpt;
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
     @Override
-    public Product findByQualification(String qualification) {
-        Product product = productRepository.findByQualification(qualification);
-        return loadCategoryInProduct(product);
+    public Product getProductById(Long id) throws ProductNotFoundException {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
+    }
+
+    @Override
+    public Product getProductByName(String name) throws ProductNotFoundException {
+        return productRepository.findByName(name)
+                .orElseThrow(() -> new ProductNotFoundException(name));
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ResponseEntity<Product> updateProduct(Product product) {
-        Optional<Product> existingProduct = productRepository.findById(product.getId());
-
-        if (existingProduct.isPresent()) {
-            Product productToUpdate = existingProduct.get();
-            productToUpdate.setQualification(product.getQualification());
-            productToUpdate.setDescription(product.getDescription());
-            productToUpdate.setPrice(product.getPrice());
-            productToUpdate.setDiscount(product.getDiscount());
-            productToUpdate.setImages(product.getImages());
-            productToUpdate.setCategoryId(product.getCategoryId());
-
-            Product updatedProduct = productRepository.save(productToUpdate);
-            loadCategoryInProduct(updatedProduct);
-
-            return ResponseEntity.ok(updatedProduct);
-        } else {
-            return ResponseEntity.notFound().build();
+    public Product createProduct(Product product) throws ProductDuplicateException {
+        if (productRepository.existsByName(product.getName())) {
+            throw new ProductDuplicateException(product.getName());
         }
+        if (!categoryRepository.existsById(product.getCategoryId())){
+            throw new CategoryNotFoundException(product.getCategoryId());
+        }
+        return productRepository.save(product);
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product createProduct(Product product) throws ProductDuplicateException { //! ERROR FATAL
-         // Verificar duplicado
-         Product existingProduct = productRepository.findByQualification(product.getQualification());
-         if (existingProduct != null) {
-             throw new ProductDuplicateException();
-         }
- 
-         // Guardar producto (Spring JPA automáticamente guarda las imágenes en la tabla secundaria)
-         Product savedProduct = productRepository.save(product);
- 
-         // Si querés devolver el producto con la categoría cargada
-         return loadCategoryInProduct(savedProduct);
+    public Product updateProduct(Product updatedProduct) throws ProductDuplicateException {
+        Product existingProduct = getProductById(updatedProduct.getId());
+        if (productRepository.existsByName(updatedProduct.getName()) &&
+                !existingProduct.getName().equals(updatedProduct.getName())) {
+            throw new ProductDuplicateException(updatedProduct.getName());
+        }
+        if (!categoryRepository.existsById(updatedProduct.getCategoryId())){
+            throw new CategoryNotFoundException(updatedProduct.getCategoryId());
+        }
+
+        existingProduct.setName(updatedProduct.getName());
+        existingProduct.setDescription(updatedProduct.getDescription());
+        existingProduct.setPrice(updatedProduct.getPrice());
+        existingProduct.setStock(updatedProduct.getStock());
+        existingProduct.setCategoryId(updatedProduct.getCategoryId());
+        existingProduct.setImageUrls(updatedProduct.getImageUrls());
+
+        return productRepository.save(existingProduct);
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ResponseEntity<String> deleteProductById(Long id) {
-        Optional<Product> product = productRepository.findById(id);
+    public void deleteProductById(Long id) {
+        Product product = getProductById(id);
+        productRepository.delete(product);
+    }
 
-        if (product.isPresent()) {
-            productRepository.delete(product.get());
-            return ResponseEntity.ok("El producto ya fue borrado.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe el producto.");
-        }
-    }
-    
-    @Override
-    public Product loadCategoryInProduct(Product product) {
-        if (product != null && product.getCategoryId() != null) {
-            categoryRepository.findById(product.getCategoryId())
-                .ifPresent(product::setCategory);
-        }
-        return product;
-    }
-    
-    @Override
-    public List<Product> loadCategoriesInProducts(List<Product> products) {
-        if (products != null) {
-            products.forEach(this::loadCategoryInProduct);
-        }
-        return products;
-    }
-    
     @Override
     public List<Product> findProductsByCategoryId(Long categoryId) {
-        List<Product> products = productRepository.findByCategoryId(categoryId);
-        return loadCategoriesInProducts(products);
+        return productRepository.findByCategoryId(categoryId);
     }
-} 
+
+}

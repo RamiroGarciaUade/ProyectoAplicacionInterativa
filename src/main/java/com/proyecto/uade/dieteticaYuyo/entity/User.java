@@ -8,6 +8,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,11 +30,13 @@ public class User {
     private String username;
 
     @Column(nullable = false, unique = true)
+    @Email(message = "El email debe tener un formato válido")
     private String email;
 
     private String address;
 
     @Column(nullable = false)
+    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
 
     private String imageUrl;

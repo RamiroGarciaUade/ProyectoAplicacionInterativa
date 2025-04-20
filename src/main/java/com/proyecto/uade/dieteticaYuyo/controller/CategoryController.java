@@ -53,21 +53,10 @@ public class CategoryController {
 
     // GET /categories/name/{name}
     @GetMapping("/name/{name}")
-    public ResponseEntity<CategoryResponseDTO> getCategoryByUsername(@PathVariable String name) {
+    public ResponseEntity<CategoryResponseDTO> getCategoryByName(@PathVariable String name) {
         Category category = categoryService.getCategoryByName(name);
         return ResponseEntity.ok(CategoryResponseDTO.fromCategory(category));
     }
-
-    // TODO: Work on this later
-/*    @GetMapping("/{categoryId}/products")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long categoryId) {
-        if (!categoryService.getCategoryById(categoryId).isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        
-        List<Product> products = categoryService.getProductsByCategory(categoryId);
-        return ResponseEntity.ok(products);
-    }*/
 
     // POST /categories
     @PostMapping
