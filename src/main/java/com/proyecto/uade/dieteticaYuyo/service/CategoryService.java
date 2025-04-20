@@ -10,21 +10,20 @@ import org.springframework.http.ResponseEntity;
 import com.proyecto.uade.dieteticaYuyo.entity.Category;
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
+import org.springframework.stereotype.Service;
 
 public interface CategoryService {
-    public Page<Category> getCategories(PageRequest pageRequest);
-    
-    public List<Category> getAllCategories();
+    Page<Category> getPagedCategories(PageRequest pageRequest);
 
-    public Optional<Category> getCategoryById(Long categoryId);
-    
-    public List<Category> findByDescription(String description);
+    List<Category> getAllCategories();
 
-    public Category createCategory(Category category) throws CategoryDuplicateException;
+    Category getCategoryById(Long id);
 
-    public ResponseEntity<Category> updateCategory(Category category);
+    Category getCategoryByName(String name);
 
-    public ResponseEntity<String> deleteCategoryById(Long id);
-    
-    public List<Product> getProductsByCategory(Long categoryId);
+    Category createCategory(Category category) throws CategoryDuplicateException;
+
+    Category updateCategory(Category category);
+
+    void deleteCategoryById(Long id);
 }
