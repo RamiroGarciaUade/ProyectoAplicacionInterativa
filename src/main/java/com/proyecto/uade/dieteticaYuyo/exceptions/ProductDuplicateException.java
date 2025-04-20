@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class ProductDuplicateException extends RuntimeException {
     public ProductDuplicateException(String name) {
-        super("El producto con el nombre '" + name + "' ya existe.");
+        super("El producto con el nombre \"" + name + "\" ya existe.");
     }
 }

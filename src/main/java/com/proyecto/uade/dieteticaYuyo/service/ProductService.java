@@ -20,11 +20,12 @@ public interface ProductService {
 
     Product getProductByName(String name) throws ProductNotFoundException;
 
+    List<Product> getProductsByCategory(Long categoryId);
+
     Product createProduct(Product product) throws ProductDuplicateException;
 
     Product updateProduct(Product product) throws ProductDuplicateException;
 
     void deleteProductById(Long id);
 
-    List<Product> findProductsByCategoryId(Long categoryId);
-} 
+}

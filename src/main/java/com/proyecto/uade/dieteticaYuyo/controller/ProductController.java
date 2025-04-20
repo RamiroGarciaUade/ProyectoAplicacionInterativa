@@ -67,6 +67,17 @@ public class ProductController {
         return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
     }
 
+    // GET /products/category/{categoryId}
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        List<ProductResponseDTO> productDTOs = products.stream()
+                .map(ProductResponseDTO::fromProduct)
+                .toList();
+
+        return ResponseEntity.ok(productDTOs);
+    }
+
     // POST /products
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO requestDTO) {

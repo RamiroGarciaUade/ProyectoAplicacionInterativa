@@ -46,7 +46,7 @@ public class CategoryController {
 
     // GET /categories/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDTO> getUserById(@PathVariable Long id) {
+    public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(CategoryResponseDTO.fromCategory(category));
     }
@@ -92,4 +92,5 @@ public class CategoryController {
         categoryService.deleteCategoryById(id);
         return ResponseEntity.ok(Map.of("message", "Categoría eliminada con éxito"));
     }
+
 }

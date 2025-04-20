@@ -99,4 +99,5 @@ public class UserController {
         userService.deleteUserById(id);
         return ResponseEntity.ok(Map.of("message", "Usuario eliminado con éxito"));
     }
+
 }
