@@ -1,8 +1,8 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -12,19 +12,18 @@ import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
 
 public interface CategoryService {
-    public Page<Category> getCategories(PageRequest pageRequest);
-    
-    public List<Category> getAllCategories();
+    Page<Category> getPagedCategories(PageRequest pageRequest);
 
-    public Optional<Category> getCategoryById(Long categoryId);
-    
-    public List<Category> findByDescription(String description);
+    List<Category> getAllCategories();
 
-    public Category createCategory(Category category) throws CategoryDuplicateException;
+    Category getCategoryById(Long id) throws CategoryNotFoundException;
 
-    public ResponseEntity<Category> updateCategory(Category category);
+    Category getCategoryByName(String name) throws CategoryNotFoundException;
 
-    public ResponseEntity<String> deleteCategoryById(Long id);
-    
-    public List<Product> getProductsByCategory(Long categoryId);
+    Category createCategory(String name, String description) throws CategoryDuplicateException;
+
+    Category updateCategory(Long id, String name, String description) throws CategoryDuplicateException;
+
+    void deleteCategoryById(Long id);
+
 }

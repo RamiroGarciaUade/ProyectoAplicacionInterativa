@@ -1,9 +1,10 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,10 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductRequest;
-import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductRequestDTO;
 import com.proyecto.uade.dieteticaYuyo.service.ProductService;
-import com.proyecto.uade.dieteticaYuyo.service.CategoryService;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,99 +30,87 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ProductController {
     @Autowired
     private ProductService productService;
-    
-    @Autowired
-    private CategoryService categoryService;
 
+    // GET /products
     @GetMapping
-    public Page<Product> getProducts(
+    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
+        List<Product> products = productService.getAllProducts();
+        List<ProductResponseDTO> productDTOs = products.stream()
+                .map(ProductResponseDTO::fromProduct)
+                .toList();
+
+        return ResponseEntity.ok(productDTOs);
+    }
+
+    // GET /products/paged
+    @GetMapping("/paged")
+    public ResponseEntity<Page<ProductResponseDTO>> getPagedProducts(
             @RequestParam(required = false, defaultValue = "0") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer size) {
-        return productService.getProductsPage(PageRequest.of(page, size));
-    }
-    
-    @GetMapping("/all")
-    public List<Product> getAllProducts() {
-        return productService.getProducts();
+
+        Page<Product> productPage = productService.getPagedProducts(PageRequest.of(page, size));
+        Page<ProductResponseDTO> productDTOPage = productPage.map(ProductResponseDTO::fromProduct);
+
+        return ResponseEntity.ok(productDTOPage);
     }
 
+    // GET /products/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Optional<Product> product = productService.getProductById(id);
-        if (product.isPresent()) {
-            return ResponseEntity.ok(product.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
+        Product product = productService.getProductById(id);
+        return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
     }
 
-    @GetMapping("/qualification/{qualification}")
-    public ResponseEntity<Product> getProductByQualification(@PathVariable String qualification) {
-        Product product = productService.findByQualification(qualification);
-        if (product != null) {
-            return ResponseEntity.ok(product);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    // GET /products/name/{name}
+    @GetMapping("/name/{name}")
+    public ResponseEntity<ProductResponseDTO> getProductByName(@PathVariable String name) {
+        Product product = productService.getProductByName(name);
+        return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
     }
 
-    @PostMapping("/")
-    public ResponseEntity<?> createProduct(@RequestBody ProductRequest productRequest) { 
-        try {
-            Product newProduct = new Product();
-            newProduct.setQualification(productRequest.getQualification());
-            newProduct.setDescription(productRequest.getDescription());
-            newProduct.setPrice(productRequest.getPrice());
-            newProduct.setDiscount(productRequest.getDiscount());
+    // GET /products/category/{categoryId}
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        List<ProductResponseDTO> productDTOs = products.stream()
+                .map(ProductResponseDTO::fromProduct)
+                .toList();
 
-            // Asignar categoría si se proporciona
-            if (productRequest.getCategoryId() != null) {
-                categoryService.getCategoryById(productRequest.getCategoryId())
-                    .ifPresent(newProduct::setCategory);
-            }
-
-            // Asignar imágenes directamente (ya son Strings)
-            if (productRequest.getImages() != null && !productRequest.getImages().isEmpty()) {
-                newProduct.setImages(productRequest.getImages());
-            }
-
-            // Guardar producto
-            Product createdProduct = productService.createProduct(newProduct);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
-
-        } catch (ProductDuplicateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El producto ya existe"));
-        }
+        return ResponseEntity.ok(productDTOs);
     }
 
+    // POST /products
+    @PostMapping
+    public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO requestDTO) {
+        Product savedProduct = productService.createProduct(requestDTO.getName(), requestDTO.getDescription(), requestDTO.getPrice(), requestDTO.getStock(), requestDTO.getCategoryId(), requestDTO.getImageUrls());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of("message", "Producto " + savedProduct.getName() + " creado con éxito"));
+    }
+
+    // PUT /products/{id}
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
-    Optional<Product> productOptional = productService.getProductById(id);
-    if (productOptional.isPresent()) {
-        Product existingProduct = productOptional.get();
-        existingProduct.setQualification(request.getQualification());
-        existingProduct.setDescription(request.getDescription());
-        existingProduct.setPrice(request.getPrice());
-        existingProduct.setDiscount(request.getDiscount());
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequestDTO requestDTO) {
+        Product currentProduct = productService.getProductById(id);
 
-        if (request.getCategoryId() != null) {
-            categoryService.getCategoryById(request.getCategoryId())
-                .ifPresent(existingProduct::setCategory);
-        }
+        String name = requestDTO.getName() != null ? requestDTO.getName() : currentProduct.getName();
+        String description = requestDTO.getName() != null ? requestDTO.getDescription() : currentProduct.getDescription();
+        BigDecimal price = requestDTO.getPrice() != null ? requestDTO.getPrice() : currentProduct.getPrice();
+        Integer stock = requestDTO.getStock() != null ? requestDTO.getStock() : currentProduct.getStock();
+        Long categoryId = requestDTO.getCategoryId() != null ? requestDTO.getCategoryId() : currentProduct.getCategoryId();
+        List<String> imageUrls = requestDTO.getImageUrls() != null ? requestDTO.getImageUrls() : currentProduct.getImageUrls();
 
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
-            existingProduct.setImages(request.getImages());
-        }
-
-        return productService.updateProduct(existingProduct);
-    }
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Product updatedProduct = productService.updateProduct(id, name, description, price, stock, categoryId, imageUrls);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(Map.of("message", "Producto " + updatedProduct.getName() + " actualizado con éxito"));
     }
 
-
-    @DeleteMapping("DeleteProduct/{id}")
-    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
-        return productService.deleteProductById(id);
+    // DELETE /products/{id}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
+        productService.deleteProductById(id);
+        return ResponseEntity.ok(Map.of("message", "Producto eliminado con éxito"));
     }
-} 
+
+}

@@ -2,8 +2,10 @@ package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
+
+import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -23,73 +25,60 @@ public class CategoryServiceImpl implements CategoryService {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    @Lazy
-    private ProductService productService;
-
     @Override
-    public Page<Category> getCategories(PageRequest pageable) {
-        return categoryRepository.findAll(pageable);
+    public Page<Category> getPagedCategories(PageRequest pageRequest) {
+        return categoryRepository.findAll(pageRequest);
     }
 
     @Override
     public List<Category> getAllCategories() {
-        return (ArrayList<Category>) categoryRepository.findAll();
+        return categoryRepository.findAll();
     }
 
     @Override
-    public Optional<Category> getCategoryById(Long categoryId) {
-        return categoryRepository.findById(categoryId);
+    public Category getCategoryById(Long id) throws CategoryNotFoundException {
+        return categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException(id));
     }
 
     @Override
-    public List<Category> findByDescription(String description) {
-        return categoryRepository.findByDescription(description);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Throwable.class)
-    public Category createCategory(Category category) throws CategoryDuplicateException {
-        List<Category> categories = categoryRepository.findByDescription(category.getDescription());
-        if (categories.isEmpty()) {
-            return categoryRepository.save(category);
-        }
-        throw new CategoryDuplicateException();
+    public Category getCategoryByName(String name) throws CategoryNotFoundException {
+        return categoryRepository.findByName(name)
+                .orElseThrow(() -> new CategoryNotFoundException(name));
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ResponseEntity<Category> updateCategory(Category category) {
-        Optional<Category> existingCategory = categoryRepository.findById(category.getId());
-
-        if (existingCategory.isPresent()) {
-            Category categoryToUpdate = existingCategory.get();
-            categoryToUpdate.setName(category.getName());
-            categoryToUpdate.setDescription(category.getDescription());
-
-            Category updatedCategory = categoryRepository.save(categoryToUpdate);
-
-            return ResponseEntity.ok(updatedCategory);
-        } else {
-            return ResponseEntity.notFound().build();
+    public Category createCategory(String name, String description) throws CategoryDuplicateException {
+        if (categoryRepository.existsByName(name)) {
+            throw new CategoryDuplicateException(name);
         }
+        return categoryRepository.save(Category.builder()
+                .name(name)
+                .description(description)
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public ResponseEntity<String> deleteCategoryById(Long id) {
-        Optional<Category> category = categoryRepository.findById(id);
-
-        if (category.isPresent()) {
-            categoryRepository.delete(category.get());
-            return ResponseEntity.ok("La categoría ya fue borrada.");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe esta categoría.");
+    public Category updateCategory(Long id, String name, String description) throws CategoryDuplicateException {
+        Category category = getCategoryById(id);
+        if (categoryRepository.existsByName(name) &&
+                !category.getName().equals(name)) {
+            throw new UserDuplicateException(name);
         }
+
+        category.setName(name);
+        category.setDescription(description);
+
+        return categoryRepository.save(category);
     }
 
     @Override
-    public List<Product> getProductsByCategory(Long categoryId) {
-        return productService.findProductsByCategoryId(categoryId);
+    @Transactional(rollbackFor = Throwable.class)
+    public void deleteCategoryById(Long id) {
+        Category category = getCategoryById(id);
+        categoryRepository.delete(category);
     }
+
 }

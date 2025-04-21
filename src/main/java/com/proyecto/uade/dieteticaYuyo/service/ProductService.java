@@ -1,11 +1,11 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
+import com.proyecto.uade.dieteticaYuyo.exceptions.ProductNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
@@ -13,23 +13,20 @@ import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
 
 @Service
 public interface ProductService {
-    public List<Product> getProducts();
-    
-    public Page<Product> getProductsPage(PageRequest pageRequest);
+    List<Product> getAllProducts();
 
-    public Optional<Product> getProductById(Long productId);
+    Page<Product> getPagedProducts(PageRequest pageRequest);
 
-    public Product findByQualification(String qualification);
+    Product getProductById(Long id) throws ProductNotFoundException;
 
-    public ResponseEntity<Product> updateProduct(Product product);
+    Product getProductByName(String name) throws ProductNotFoundException;
 
-    public Product createProduct(Product product) throws ProductDuplicateException;
-    
-    public ResponseEntity<String> deleteProductById(Long id);
-    
-    public Product loadCategoryInProduct(Product product);
-    
-    public List<Product> loadCategoriesInProducts(List<Product> products);
-    
-    public List<Product> findProductsByCategoryId(Long categoryId);
-} 
+    List<Product> getProductsByCategory(Long categoryId);
+
+    Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
+
+    Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
+
+    void deleteProductById(Long id);
+
+}
