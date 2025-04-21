@@ -87,6 +87,7 @@ public class ProductController {
                 .price(requestDTO.getPrice())
                 .stock(requestDTO.getStock())
                 .categoryId(requestDTO.getCategoryId())
+                .imageUrls(requestDTO.getImageUrls())
                 .build();
 
         Product savedProduct = productService.createProduct(newProduct);
@@ -105,6 +106,7 @@ public class ProductController {
         existingProduct.setPrice(requestDTO.getPrice());
         existingProduct.setStock(requestDTO.getStock());
         existingProduct.setCategoryId(requestDTO.getCategoryId());
+        existingProduct.setImageUrls(requestDTO.getImageUrls());
 
         Product updatedProduct = productService.updateProduct(existingProduct);
         return ResponseEntity
