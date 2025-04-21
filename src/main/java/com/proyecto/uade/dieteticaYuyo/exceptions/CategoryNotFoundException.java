@@ -11,6 +11,6 @@ public class CategoryNotFoundException extends RuntimeException {
     }
 
     public CategoryNotFoundException(String name) {
-        super("Categoría con nombre: \"" + name + "\" no encontrada.");
+        super("Categoría con nombre: '" + name + "' no encontrada.");
     }
 }

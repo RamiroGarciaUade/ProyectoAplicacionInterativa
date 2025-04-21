@@ -2,6 +2,7 @@ package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Role;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,28 +36,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public User updateUser(User updatedUser) throws UserDuplicateException {
-        User existingUser = getUserById(updatedUser.getId());
-        if (userRepository.existsByUsername(updatedUser.getUsername()) &&
-                !existingUser.getUsername().equals(updatedUser.getUsername())) {
-            throw new UserDuplicateException(updatedUser.getUsername());
+    public User createUser(String username, String email, String address, String password, String imageUrl) throws UserDuplicateException {
+        if (userRepository.existsByUsername(username)) {
+            throw new UserDuplicateException(username);
         }
-
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setPassword(updatedUser.getPassword());
-        existingUser.setAddress(updatedUser.getAddress());
-        existingUser.setImageUrl(updatedUser.getImageUrl());
-
-        return userRepository.save(existingUser);
+        return userRepository.save(User.builder()
+                .username(username)
+                .email(email)
+                .address(address)
+                .password(password)
+                .imageUrl(imageUrl)
+                .role(Role.USER)
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public User createUser(User user) throws UserDuplicateException {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new UserDuplicateException(user.getUsername());
+    public User updateUser(Long id, String username, String email, String address, String password, String imageUrl) throws UserDuplicateException {
+        User user = getUserById(id);
+        if (userRepository.existsByUsername(username) &&
+                !user.getUsername().equals(username)) {
+            throw new UserDuplicateException(username);
         }
+
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setAddress(address);
+        user.setPassword(password);
+        user.setImageUrl(imageUrl);
+
         return userRepository.save(user);
     }
 

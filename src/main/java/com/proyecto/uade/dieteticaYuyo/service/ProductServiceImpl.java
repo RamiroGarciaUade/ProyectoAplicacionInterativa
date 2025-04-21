@@ -1,5 +1,6 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
@@ -47,36 +48,44 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product createProduct(Product product) throws ProductDuplicateException {
-        if (productRepository.existsByName(product.getName())) {
-            throw new ProductDuplicateException(product.getName());
+    public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException {
+        if (productRepository.existsByName(name)) {
+            throw new ProductDuplicateException(name);
         }
-        if (!categoryRepository.existsById(product.getCategoryId())){
-            throw new CategoryNotFoundException(product.getCategoryId());
+        if (!categoryRepository.existsById(categoryId)){
+            throw new CategoryNotFoundException(categoryId);
         }
-        return productRepository.save(product);
+
+        return productRepository.save(Product.builder()
+                .name(name)
+                .description(description)
+                .price(price)
+                .stock(stock)
+                .categoryId(categoryId)
+                .imageUrls(imageUrls)
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product updateProduct(Product updatedProduct) throws ProductDuplicateException {
-        Product existingProduct = getProductById(updatedProduct.getId());
-        if (productRepository.existsByName(updatedProduct.getName()) &&
-                !existingProduct.getName().equals(updatedProduct.getName())) {
-            throw new ProductDuplicateException(updatedProduct.getName());
+    public Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException {
+        Product product = getProductById(id);
+        if (productRepository.existsByName(name) &&
+                !product.getName().equals(name)) {
+            throw new ProductDuplicateException(name);
         }
-        if (!categoryRepository.existsById(updatedProduct.getCategoryId())){
-            throw new CategoryNotFoundException(updatedProduct.getCategoryId());
+        if (!categoryRepository.existsById(categoryId)){
+            throw new CategoryNotFoundException(categoryId);
         }
 
-        existingProduct.setName(updatedProduct.getName());
-        existingProduct.setDescription(updatedProduct.getDescription());
-        existingProduct.setPrice(updatedProduct.getPrice());
-        existingProduct.setStock(updatedProduct.getStock());
-        existingProduct.setCategoryId(updatedProduct.getCategoryId());
-        existingProduct.setImageUrls(updatedProduct.getImageUrls());
+        product.setName(name);
+        product.setDescription(description);
+        product.setPrice(price);
+        product.setStock(stock);
+        product.setCategoryId(categoryId);
+        product.setImageUrls(imageUrls);
 
-        return productRepository.save(existingProduct);
+        return productRepository.save(product);
     }
 
     @Override

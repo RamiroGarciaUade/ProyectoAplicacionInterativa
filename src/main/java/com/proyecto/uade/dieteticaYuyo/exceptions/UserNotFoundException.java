@@ -11,7 +11,7 @@ public class UserNotFoundException extends RuntimeException {
     }
 
     public UserNotFoundException(String username) {
-        super("Usuario con nombre de usuario: \"" + username + "\" no encontrado.");
+        super("Usuario con nombre de usuario: '" + username + "' no encontrado.");
     }
 }
 

@@ -2,9 +2,7 @@ package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
 
-import com.proyecto.uade.dieteticaYuyo.entity.Product;
-import com.proyecto.uade.dieteticaYuyo.entity.PurchaseItem;
-import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrderStatus;
+import com.proyecto.uade.dieteticaYuyo.entity.*;
 import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInsufficientStockException;
 import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInvalidStateException;
 import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderNotFoundException;
@@ -14,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrder;
 import com.proyecto.uade.dieteticaYuyo.repository.PurchaseOrderRepository;
 
 @Service
@@ -50,22 +47,35 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public PurchaseOrder createPurchaseOrder(PurchaseOrder purchaseOrder) {
+    public PurchaseOrder createPurchaseOrder(User user, List<PurchaseItem> items) {
+        PurchaseOrder purchaseOrder = PurchaseOrder.builder()
+                .status(PurchaseOrderStatus.PENDING)
+                .user(user)
+                .build();
+
+        items.forEach(item ->
+                purchaseOrder.addItem(item.getProduct(), item.getQuantity())
+        );
+
         return purchaseOrderRepository.save(purchaseOrder);
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public PurchaseOrder updatePurchaseOrder(PurchaseOrder updatedPurchaseOrder) throws PurchaseOrderInvalidStateException {
-        PurchaseOrder existingPurchaseOrder = getPurchaseOrderById(updatedPurchaseOrder.getId());
-        if (existingPurchaseOrder.getStatus() != PurchaseOrderStatus.PENDING) {
-            throw new PurchaseOrderInvalidStateException(updatedPurchaseOrder.getId());
+    public PurchaseOrder updatePurchaseOrder(Long id, User user, List<PurchaseItem> items) throws PurchaseOrderInvalidStateException {
+        PurchaseOrder purchaseOrder = getPurchaseOrderById(id);
+        if (purchaseOrder.getStatus() != PurchaseOrderStatus.PENDING) {
+            throw new PurchaseOrderInvalidStateException(id);
         }
 
-        existingPurchaseOrder.setUser(updatedPurchaseOrder.getUser());
-        existingPurchaseOrder.setItems(updatedPurchaseOrder.getItems());
+        purchaseOrder.setUser(user);
+        purchaseOrder.clearItems();
+        items.forEach(item ->
+                purchaseOrder.addItem(item.getProduct(), item.getQuantity())
+        );
+        purchaseOrder.preUpdate();
 
-        return purchaseOrderRepository.save(existingPurchaseOrder);
+        return purchaseOrderRepository.save(purchaseOrder);
     }
 
     @Override
@@ -73,7 +83,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     public void deletePurchaseOrderById(Long id) {
         PurchaseOrder purchaseOrder = getPurchaseOrderById(id);
         purchaseOrderRepository.delete(purchaseOrder);
-        // TODO: We could add the same status validation here
+        // TODO: We could add the same status validation here, maybe this whole endpoint isn't necessary
     }
 
     @Override
@@ -92,7 +102,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 throw new PurchaseOrderInsufficientStockException(product.getName(), product.getStock(), quantity);
             }
 
-            // TODO: @Transactional should make this work without having to save the product change, check on it later!
             product.setStock(product.getStock() - quantity);
         }
 

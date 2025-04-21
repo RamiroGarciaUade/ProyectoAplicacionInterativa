@@ -6,10 +6,8 @@ import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,26 +44,29 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Category createCategory(Category category) throws CategoryDuplicateException {
-        if (categoryRepository.existsByName(category.getName())) {
-            throw new CategoryDuplicateException(category.getName());
+    public Category createCategory(String name, String description) throws CategoryDuplicateException {
+        if (categoryRepository.existsByName(name)) {
+            throw new CategoryDuplicateException(name);
         }
-        return categoryRepository.save(category);
+        return categoryRepository.save(Category.builder()
+                .name(name)
+                .description(description)
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Category updateCategory(Category updatedCategory) throws CategoryDuplicateException {
-        Category existingCategory = getCategoryById(updatedCategory.getId());
-        if (categoryRepository.existsByName(updatedCategory.getName()) &&
-                !existingCategory.getName().equals(updatedCategory.getName())) {
-            throw new UserDuplicateException(updatedCategory.getName());
+    public Category updateCategory(Long id, String name, String description) throws CategoryDuplicateException {
+        Category category = getCategoryById(id);
+        if (categoryRepository.existsByName(name) &&
+                !category.getName().equals(name)) {
+            throw new UserDuplicateException(name);
         }
 
-        existingCategory.setName(updatedCategory.getName());
-        existingCategory.setDescription(updatedCategory.getDescription());
+        category.setName(name);
+        category.setDescription(description);
 
-        return categoryRepository.save(existingCategory);
+        return categoryRepository.save(category);
     }
 
     @Override

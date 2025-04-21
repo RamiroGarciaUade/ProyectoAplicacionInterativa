@@ -61,12 +61,7 @@ public class CategoryController {
     // POST /categories
     @PostMapping
     public ResponseEntity<?> createCategory(@RequestBody CategoryRequestDTO requestDTO) {
-        Category newCategory = Category.builder()
-                .name(requestDTO.getName())
-                .description(requestDTO.getDescription())
-                .build();
-
-        Category savedCategory = categoryService.createCategory(newCategory);
+        Category savedCategory = categoryService.createCategory(requestDTO.getName(), requestDTO.getDescription());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Categoría " + savedCategory.getName() + " creada con éxito"));
@@ -75,12 +70,11 @@ public class CategoryController {
     // PUT /categories/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody CategoryRequestDTO requestDTO) {
-        Category existingCategory = categoryService.getCategoryById(id);
+        Category currentCategory = categoryService.getCategoryById(id);
+        String name = requestDTO.getName() != null ? requestDTO.getName() : currentCategory.getName();
+        String description = requestDTO.getName() != null ? requestDTO.getDescription() : currentCategory.getDescription();
 
-        existingCategory.setName(requestDTO.getName());
-        existingCategory.setDescription(requestDTO.getDescription());
-
-        Category updatedCategory = categoryService.updateCategory(existingCategory);
+        Category updatedCategory = categoryService.updateCategory(id, name, description);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "Categoría " + updatedCategory.getName() + " actualizada con éxito"));

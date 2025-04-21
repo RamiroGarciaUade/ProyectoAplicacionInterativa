@@ -11,6 +11,6 @@ public class ProductNotFoundException extends RuntimeException {
     }
 
     public ProductNotFoundException(String name) {
-        super("Producto con nombre: \"" + name + "\" no encontrado.");
+        super("Producto con nombre: '" + name + "' no encontrado.");
     }
 }

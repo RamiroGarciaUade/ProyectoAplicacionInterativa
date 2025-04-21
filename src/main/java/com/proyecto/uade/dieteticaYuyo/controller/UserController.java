@@ -49,45 +49,24 @@ public class UserController {
     // POST /users
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserRequestDTO requestDTO) {
-        User newUser = User.builder()
-                .username(requestDTO.getUsername())
-                .email(requestDTO.getEmail())
-                .address(requestDTO.getAddress())
-                .password(requestDTO.getPassword())
-                .imageUrl(requestDTO.getImageUrl())
-                .role(Role.USER) // Default role
-                .build();
-
-        User savedUser = userService.createUser(newUser);
+        User savedUser = userService.createUser(requestDTO.getUsername(), requestDTO.getEmail(), requestDTO.getAddress(), requestDTO.getPassword(), requestDTO.getImageUrl());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Usuario " + savedUser.getUsername() + " creado con éxito"));
     }
 
-    //TODO: Refactor and move to a new Auth controller class
-    @GetMapping("auth/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-        User user = userService.getUserByUsername(loginRequest.getUsername());
-
-        if (user != null && user.getPassword().equals(loginRequest.getPassword())) {
-            return ResponseEntity.ok(user); // mal token
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-    }
-
     // PUT /users/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
-        User existingUser = userService.getUserById(id);
+        User currentUser = userService.getUserById(id);
 
-        existingUser.setUsername(requestDTO.getUsername());
-        existingUser.setEmail(requestDTO.getEmail());
-        existingUser.setAddress(requestDTO.getAddress());
-        existingUser.setPassword(requestDTO.getPassword());
-        existingUser.setImageUrl(requestDTO.getImageUrl());
+        String username = requestDTO.getUsername() != null ? requestDTO.getUsername() : currentUser.getUsername();
+        String email = requestDTO.getEmail() != null ? requestDTO.getEmail() : currentUser.getEmail();
+        String address = requestDTO.getAddress() != null ? requestDTO.getAddress() : currentUser.getAddress();
+        String password = requestDTO.getPassword() != null ? requestDTO.getPassword() : currentUser.getPassword();
+        String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUser.getImageUrl();
 
-        User updatedUser = userService.updateUser(existingUser);
+        User updatedUser = userService.updateUser(id, username, email, address, password, imageUrl);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "Usuario " + updatedUser.getUsername() + " actualizado con éxito"));

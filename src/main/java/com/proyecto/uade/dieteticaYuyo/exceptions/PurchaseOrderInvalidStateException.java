@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class PurchaseOrderInvalidStateException extends RuntimeException {
     public PurchaseOrderInvalidStateException(Long id) {
-        super("La orden de compra con ID: " + id + " ya no está en estado pendiente, por lo que no se puede modificar.");
+        super("La orden de compra número: " + id + " no se encuentra en estado pendiente, por lo que ya no se puede modificar.");
     }
 }

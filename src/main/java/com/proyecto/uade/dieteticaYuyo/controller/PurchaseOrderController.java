@@ -78,74 +78,61 @@ public class PurchaseOrderController {
 
     // POST /purchase-orders
     @PostMapping
-    public ResponseEntity<?> createPurchaseOrder(@RequestBody PurchaseOrderRequestDTO request) {
-        User user = userService.getUserById(request.getUserId());
+    public ResponseEntity<?> createPurchaseOrder(@RequestBody PurchaseOrderRequestDTO requestDTO) {
+        User user = userService.getUserById(requestDTO.getUserId());
+        List<PurchaseItem> items = requestDTO.getItems().stream()
+                .map(purchaseItemDTO -> PurchaseItem.builder()
+                        .product(productService.getProductById(purchaseItemDTO.getProductId()))
+                        .quantity(purchaseItemDTO.getQuantity())
+                        .build())
+                .toList();
 
-        PurchaseOrder order = new PurchaseOrder();
-        order.setStatus(PurchaseOrderStatus.PENDING);
-        order.setUser(user);
-        order.setItems(request.getItems().stream().map(dto -> {
-            Product product = productService.getProductById(dto.getProductId());
-            PurchaseItem item = new PurchaseItem();
-            item.setProduct(product);
-            item.setQuantity(dto.getQuantity());
-            item.setOrder(order);
-            return item;
-        }).toList());
-
-        PurchaseOrder savedPurchaseOrder = purchaseOrderService.createPurchaseOrder(order);
+        PurchaseOrder savedPurchaseOrder = purchaseOrderService.createPurchaseOrder(user, items);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of("message", "Orden de compra " + savedPurchaseOrder.getId().toString() + " creada con éxito"));
+                .body(Map.of("message", "Orden de compra número: " + savedPurchaseOrder.getId().toString() + " creada con éxito"));
     }
 
     // PUT /purchase-orders/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(
             @PathVariable Long id,
-            @RequestBody PurchaseOrderRequestDTO request
+            @RequestBody PurchaseOrderRequestDTO requestDTO
     ) {
-        User user = userService.getUserById(request.getUserId());
+        PurchaseOrder currentPurchaseOrder = purchaseOrderService.getPurchaseOrderById(id);
+        User user = requestDTO.getUserId() != null ? userService.getUserById(requestDTO.getUserId()) : currentPurchaseOrder.getUser();
+        List<PurchaseItem> items = requestDTO.getItems() != null ? requestDTO.getItems().stream()
+                .map(purchaseItemDTO -> PurchaseItem.builder()
+                        .product(productService.getProductById(purchaseItemDTO.getProductId()))
+                        .quantity(purchaseItemDTO.getQuantity())
+                        .build())
+                .toList() : currentPurchaseOrder.getItems();
 
-        PurchaseOrder existingPurchaseOrder = purchaseOrderService.getPurchaseOrderById(id);
-
-        List<PurchaseItem> updatedItems = request.getItems().stream().map(dto -> {
-            Product product = productService.getProductById(dto.getProductId());
-            PurchaseItem item = new PurchaseItem();
-            item.setProduct(product);
-            item.setQuantity(dto.getQuantity());
-            item.setOrder(existingPurchaseOrder);
-            return item;
-        }).toList();
-
-        existingPurchaseOrder.setUser(user);
-        existingPurchaseOrder.setItems(updatedItems);
-
-        PurchaseOrder updatedPurchaseOrder = purchaseOrderService.updatePurchaseOrder(existingPurchaseOrder);
+        PurchaseOrder updatedPurchaseOrder = purchaseOrderService.updatePurchaseOrder(id, user, items);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(Map.of("message", "Orden de compra " + updatedPurchaseOrder.getId().toString() + " actualizada con éxito"));
+                .body(Map.of("message", "Orden de compra número: " + id + " actualizada con éxito"));
     }
 
     // DELETE /purchase-orders/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.deletePurchaseOrderById(id);
-        return ResponseEntity.ok(Map.of("message", "Orden de compra eliminada con éxito"));
+        return ResponseEntity.ok(Map.of("message", "Orden de compra número: " + id + " eliminada con éxito"));
     }
 
     // PUT /purchase-orders/{id}/confirm
     @PutMapping("/{id}/confirm")
     public ResponseEntity<?> confirmPurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.confirmPurchaseOrder(id);
-        return ResponseEntity.ok(Map.of("message", "Orden de compra confirmada con éxito"));
+        return ResponseEntity.ok(Map.of("message", "Orden de compra número: " + id + " confirmada con éxito"));
     }
 
     // PUT /purchase-orders/{id}/cancel
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelPurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.cancelPurchaseOrder(id);
-        return ResponseEntity.ok(Map.of("message", "Orden de compra cancelada con éxito"));
+        return ResponseEntity.ok(Map.of("message", "Orden de compra número: " + id + "  cancelada con éxito"));
     }
 
 }

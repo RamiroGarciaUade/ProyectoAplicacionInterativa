@@ -18,9 +18,10 @@ public interface CategoryService {
 
     Category getCategoryByName(String name) throws CategoryNotFoundException;
 
-    Category createCategory(Category category) throws CategoryDuplicateException;
+    Category createCategory(String name, String description) throws CategoryDuplicateException;
 
-    Category updateCategory(Category category) throws CategoryDuplicateException;
+    Category updateCategory(Long id, String name, String description) throws CategoryDuplicateException;
 
     void deleteCategoryById(Long id);
+
 }

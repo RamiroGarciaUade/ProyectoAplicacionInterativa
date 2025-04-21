@@ -1,5 +1,6 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -81,16 +82,7 @@ public class ProductController {
     // POST /products
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO requestDTO) {
-        Product newProduct = Product.builder()
-                .name(requestDTO.getName())
-                .description(requestDTO.getDescription())
-                .price(requestDTO.getPrice())
-                .stock(requestDTO.getStock())
-                .categoryId(requestDTO.getCategoryId())
-                .imageUrls(requestDTO.getImageUrls())
-                .build();
-
-        Product savedProduct = productService.createProduct(newProduct);
+        Product savedProduct = productService.createProduct(requestDTO.getName(), requestDTO.getDescription(), requestDTO.getPrice(), requestDTO.getStock(), requestDTO.getCategoryId(), requestDTO.getImageUrls());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Producto " + savedProduct.getName() + " creado con éxito"));
@@ -99,16 +91,16 @@ public class ProductController {
     // PUT /products/{id}
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequestDTO requestDTO) {
-        Product existingProduct = productService.getProductById(id);
+        Product currentProduct = productService.getProductById(id);
 
-        existingProduct.setName(requestDTO.getName());
-        existingProduct.setDescription(requestDTO.getDescription());
-        existingProduct.setPrice(requestDTO.getPrice());
-        existingProduct.setStock(requestDTO.getStock());
-        existingProduct.setCategoryId(requestDTO.getCategoryId());
-        existingProduct.setImageUrls(requestDTO.getImageUrls());
+        String name = requestDTO.getName() != null ? requestDTO.getName() : currentProduct.getName();
+        String description = requestDTO.getName() != null ? requestDTO.getDescription() : currentProduct.getDescription();
+        BigDecimal price = requestDTO.getPrice() != null ? requestDTO.getPrice() : currentProduct.getPrice();
+        Integer stock = requestDTO.getStock() != null ? requestDTO.getStock() : currentProduct.getStock();
+        Long categoryId = requestDTO.getCategoryId() != null ? requestDTO.getCategoryId() : currentProduct.getCategoryId();
+        List<String> imageUrls = requestDTO.getImageUrls() != null ? requestDTO.getImageUrls() : currentProduct.getImageUrls();
 
-        Product updatedProduct = productService.updateProduct(existingProduct);
+        Product updatedProduct = productService.updateProduct(id, name, description, price, stock, categoryId, imageUrls);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "Producto " + updatedProduct.getName() + " actualizado con éxito"));

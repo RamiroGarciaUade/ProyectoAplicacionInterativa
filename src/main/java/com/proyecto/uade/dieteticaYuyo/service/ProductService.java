@@ -1,5 +1,6 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductNotFoundException;
@@ -22,9 +23,9 @@ public interface ProductService {
 
     List<Product> getProductsByCategory(Long categoryId);
 
-    Product createProduct(Product product) throws ProductDuplicateException;
+    Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
 
-    Product updateProduct(Product product) throws ProductDuplicateException;
+    Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
 
     void deleteProductById(Long id);
 
