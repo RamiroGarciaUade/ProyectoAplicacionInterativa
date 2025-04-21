@@ -1,22 +1,17 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Category;
-import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
 

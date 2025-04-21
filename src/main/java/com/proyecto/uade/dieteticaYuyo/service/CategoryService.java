@@ -5,10 +5,8 @@ import java.util.List;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Category;
-import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryDuplicateException;
 
 public interface CategoryService {
