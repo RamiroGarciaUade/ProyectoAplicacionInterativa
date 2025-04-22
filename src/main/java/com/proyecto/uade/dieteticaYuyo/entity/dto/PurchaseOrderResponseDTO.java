@@ -20,8 +20,10 @@ public class PurchaseOrderResponseDTO {
     @Data
     public static class UserSummaryDTO {
         private Long id;
-        private String username;
         private String email;
+        private String address;
+        private String firstName;
+        private String lastName;
     }
 
     @Data
@@ -42,8 +44,10 @@ public class PurchaseOrderResponseDTO {
         User user = order.getUser();
         UserSummaryDTO userDto = new UserSummaryDTO();
         userDto.setId(user.getId());
-        userDto.setUsername(user.getUsername());
         userDto.setEmail(user.getEmail());
+        userDto.setAddress(user.getAddress());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
         dto.setUser(userDto);
 
         List<ItemDetailDTO> items = order.getItems().stream().map(item -> {

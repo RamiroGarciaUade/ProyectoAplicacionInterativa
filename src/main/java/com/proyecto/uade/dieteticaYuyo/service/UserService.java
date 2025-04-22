@@ -12,11 +12,11 @@ public interface UserService {
 
     User getUserById(Long id) throws UserNotFoundException;
 
-    User getUserByUsername(String username) throws UserNotFoundException;
+    User getUserByEmail(String email) throws UserNotFoundException;
 
-    User createUser(String username, String email, String address, String password, String imageUrl) throws UserDuplicateException;
+    User createUser(String email, String password, String firstName, String lastName, String address, String imageUrl) throws UserDuplicateException;
 
-    User updateUser(Long id, String username, String email, String address, String password, String imageUrl) throws UserDuplicateException;
+    User updateUser(Long id, String email, String password, String firstName, String lastName, String address, String imageUrl) throws UserDuplicateException;
 
     void deleteUserById(Long id);
 

@@ -28,18 +28,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User implements UserDetails{
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false, unique = true)
     @Email(message = "El email debe tener un formato válido")
     private String email;
 
+    @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(nullable = false)
     private String address;
 
     @Column(nullable = false)
@@ -51,6 +55,10 @@ public class User implements UserDetails{
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

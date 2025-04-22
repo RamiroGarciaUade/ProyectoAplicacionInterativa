@@ -10,11 +10,9 @@ import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInvalidStateExcep
 import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
 
 import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrder;
 
-@Service
 public interface PurchaseOrderService {
     Page<PurchaseOrder> getPagedPurchaseOrders(PageRequest pageRequest);
 
