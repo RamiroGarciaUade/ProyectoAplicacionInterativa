@@ -6,12 +6,10 @@ import java.util.List;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Service;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
 
-@Service
 public interface ProductService {
     List<Product> getAllProducts();
 

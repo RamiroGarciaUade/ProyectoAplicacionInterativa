@@ -1,11 +1,12 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
+import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.AuthenticationResponseDTO;
 
 public interface AuthenticationService {
 
-    AuthenticationResponseDTO register(String email, String password, String firstName, String lastName, String address, String imageUrl);
+    AuthenticationResponseDTO getToken(User user);
 
-    AuthenticationResponseDTO authenticate(String email, String password);
+    void authenticate(String email, String password);
 
 }
