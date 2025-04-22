@@ -3,8 +3,6 @@ package com.proyecto.uade.dieteticaYuyo.controller;
 import java.util.List;
 import java.util.Map;
 
-import com.proyecto.uade.dieteticaYuyo.entity.Role;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.LoginRequest;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.UserRequestDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;

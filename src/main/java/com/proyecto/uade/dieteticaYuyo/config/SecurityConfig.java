@@ -2,11 +2,14 @@ package com.proyecto.uade.dieteticaYuyo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -18,27 +21,57 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-        private final JwtAuthenticationFilter jwtAuthFilter;
-        private final AuthenticationProvider authenticationProvider;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-                http
-                                .csrf(AbstractHttpConfigurer::disable)
-                                .authorizeHttpRequests(req -> req
-                                                // Rutas publicas
-                                                .requestMatchers("/api/v1/auth/**").permitAll() // Permite que todos entren a la ruta de autenticacion
-                                                .requestMatchers("/error/**").permitAll()
-                                                // Protegidas por User
-                                                .requestMatchers("/categories/**").hasAnyAuthority(Role.USER.name()) // Permite que solo el usuario pueda acceder a la ruta de categorias
-                                                .requestMatchers("/purchase-orders/**").hasAuthority(Role.USER.name())
-                                                .requestMatchers("/products/**").hasAuthority(Role.USER.name())
-                                                .anyRequest()
-                                                .authenticated()) // se ejecuta el jwtauthfilter para validar el token
-                                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-                                .authenticationProvider(authenticationProvider)
-                                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(req -> req
+                        // Rutas públicas
+                        .requestMatchers(HttpMethod.GET,
+                                "/categories/**",
+                                "/products/**"
+                        ).permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/error/**").permitAll()
+                        // Protegidas por User y Admin
+                        .requestMatchers(HttpMethod.GET,
+                                "/purchase-orders/**"
+                        ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST,
+                                "/purchase-orders"
+                        ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
+                        // Protegidas por Admin
+                        .requestMatchers(HttpMethod.POST,
+                                "/categories",
+                                "/products",
+                                "/users"
+                        ).hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT,
+                                "/categories/{id}",
+                                "/products/{id}",
+                                "/purchase-orders/{id}",
+                                "/purchase-orders/{id}/confirm",
+                                "/purchase-orders/{id}/cancel",
+                                "/users/{id}"
+                        ).hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/categories/{id}",
+                                "/products/{id}",
+                                "/purchase-orders/{id}",
+                                "/users/{id}"
+                        ).hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET,
+                                "/users/**"
+                        ).hasAuthority(Role.ADMIN.name())
+                        .anyRequest()
+                        .authenticated()) // se ejecuta el jwtauthfilter para validar el token
+                .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-                return http.build();
-        }
+        return http.build();
+    }
 }
