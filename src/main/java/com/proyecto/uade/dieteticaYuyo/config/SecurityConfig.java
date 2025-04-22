@@ -3,6 +3,7 @@ package com.proyecto.uade.dieteticaYuyo.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -15,6 +16,7 @@ import com.proyecto.uade.dieteticaYuyo.entity.Role;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -29,10 +31,6 @@ public class SecurityConfig {
                                                 // Rutas publicas
                                                 .requestMatchers("/api/v1/auth/**").permitAll() // Permite que todos entren a la ruta de autenticacion
                                                 .requestMatchers("/error/**").permitAll()
-                                                // Protegidas por User
-                                                .requestMatchers("/categories/**").hasAnyAuthority(Role.USER.name()) // Permite que solo el usuario pueda acceder a la ruta de categorias
-                                                .requestMatchers("/purchase-orders/**").hasAuthority(Role.USER.name())
-                                                .requestMatchers("/products/**").hasAuthority(Role.USER.name())
                                                 .anyRequest()
                                                 .authenticated()) // se ejecuta el jwtauthfilter para validar el token
                                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))

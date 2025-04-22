@@ -17,6 +17,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("purchase-orders")
@@ -31,6 +32,7 @@ public class PurchaseOrderController {
     private ProductService productService;
 
     // GET /purchase-orders
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @GetMapping
     public ResponseEntity<List<PurchaseOrderResponseDTO>> getAllOrders() {
         List<PurchaseOrder> purchaseOrders = purchaseOrderService.getAllPurchaseOrders();
@@ -42,6 +44,7 @@ public class PurchaseOrderController {
     }
 
     // GET /purchase-orders/paged
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @GetMapping("/paged")
     public ResponseEntity<Page<PurchaseOrderResponseDTO>> getPagedCategories(
             @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -54,6 +57,7 @@ public class PurchaseOrderController {
     }
 
     // GET /purchase-orders/{id}
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseOrderResponseDTO> getPurchaseOrderById(@PathVariable Long id) {
         PurchaseOrder purchaseOrder = purchaseOrderService.getPurchaseOrderById(id);
@@ -61,6 +65,7 @@ public class PurchaseOrderController {
     }
 
     // GET /purchase-orders/user/{userId}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<PurchaseOrderResponseDTO>> getPurchaseOrdersByUser(@PathVariable Long userId) {
         List<PurchaseOrderResponseDTO> orders = purchaseOrderService.getPurchaseOrdersByUserId(userId)
@@ -69,6 +74,7 @@ public class PurchaseOrderController {
     }
 
     // GET /purchase-orders/status/{status}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/status/{status}")
     public ResponseEntity<List<PurchaseOrderResponseDTO>> getPurchaseOrdersByStatus(@PathVariable PurchaseOrderStatus status) {
         List<PurchaseOrderResponseDTO> orders = purchaseOrderService.getPurchaseOrdersByStatus(status)
@@ -77,6 +83,7 @@ public class PurchaseOrderController {
     }
 
     // POST /purchase-orders
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<?> createPurchaseOrder(@RequestBody PurchaseOrderRequestDTO requestDTO) {
         User user = userService.getUserById(requestDTO.getUserId());
@@ -94,6 +101,7 @@ public class PurchaseOrderController {
     }
 
     // PUT /purchase-orders/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateOrder(
             @PathVariable Long id,
@@ -115,6 +123,7 @@ public class PurchaseOrderController {
     }
 
     // DELETE /purchase-orders/{id}
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.deletePurchaseOrderById(id);
@@ -122,6 +131,7 @@ public class PurchaseOrderController {
     }
 
     // PUT /purchase-orders/{id}/confirm
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}/confirm")
     public ResponseEntity<?> confirmPurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.confirmPurchaseOrder(id);
@@ -129,6 +139,7 @@ public class PurchaseOrderController {
     }
 
     // PUT /purchase-orders/{id}/cancel
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @PutMapping("/{id}/cancel")
     public ResponseEntity<?> cancelPurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.cancelPurchaseOrder(id);

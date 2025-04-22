@@ -10,6 +10,7 @@ import com.proyecto.uade.dieteticaYuyo.entity.dto.UserResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.proyecto.uade.dieteticaYuyo.entity.User;
@@ -22,6 +23,7 @@ public class UserController {
     private UserService userService;
 
     // GET /users
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<User> users = userService.getUsers();
@@ -33,6 +35,7 @@ public class UserController {
     }
 
     // GET /users/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
@@ -40,6 +43,7 @@ public class UserController {
     }
 
     // GET /users/username/{username}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/username/{username}")
     public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
         User user = userService.getUserByUsername(username);
@@ -47,6 +51,7 @@ public class UserController {
     }
 
     // POST /users
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserRequestDTO requestDTO) {
         User savedUser = userService.createUser(requestDTO.getUsername(), requestDTO.getEmail(), requestDTO.getAddress(), requestDTO.getPassword(), requestDTO.getImageUrl());
@@ -56,6 +61,7 @@ public class UserController {
     }
 
     // PUT /users/{id}
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
         User currentUser = userService.getUserById(id);
@@ -73,6 +79,7 @@ public class UserController {
     }
 
     // DELETE /users/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         userService.deleteUserById(id);

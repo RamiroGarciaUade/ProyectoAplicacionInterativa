@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     // GET /categories
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
@@ -33,6 +35,7 @@ public class CategoryController {
     }
 
     // GET /categories/paged
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/paged")
     public ResponseEntity<Page<CategoryResponseDTO>> getPagedCategories(
             @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -45,6 +48,7 @@ public class CategoryController {
     }
 
     // GET /categories/{id}
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
@@ -52,6 +56,7 @@ public class CategoryController {
     }
 
     // GET /categories/name/{name}
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping("/name/{name}")
     public ResponseEntity<CategoryResponseDTO> getCategoryByName(@PathVariable String name) {
         Category category = categoryService.getCategoryByName(name);
@@ -60,6 +65,7 @@ public class CategoryController {
 
     // POST /categories
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public ResponseEntity<?> createCategory(@RequestBody CategoryRequestDTO requestDTO) {
         Category savedCategory = categoryService.createCategory(requestDTO.getName(), requestDTO.getDescription());
         return ResponseEntity
@@ -68,6 +74,7 @@ public class CategoryController {
     }
 
     // PUT /categories/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody CategoryRequestDTO requestDTO) {
         Category currentCategory = categoryService.getCategoryById(id);
@@ -81,6 +88,7 @@ public class CategoryController {
     }
 
     // DELETE /categories/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategoryById(id);

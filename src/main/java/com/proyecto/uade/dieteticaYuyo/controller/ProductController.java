@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
@@ -32,6 +33,7 @@ public class ProductController {
     private ProductService productService;
 
     // GET /products
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         List<Product> products = productService.getAllProducts();
@@ -43,6 +45,7 @@ public class ProductController {
     }
 
     // GET /products/paged
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @GetMapping("/paged")
     public ResponseEntity<Page<ProductResponseDTO>> getPagedProducts(
             @RequestParam(required = false, defaultValue = "0") Integer page,
@@ -55,6 +58,7 @@ public class ProductController {
     }
 
     // GET /products/{id}
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
         Product product = productService.getProductById(id);
@@ -62,6 +66,7 @@ public class ProductController {
     }
 
     // GET /products/name/{name}
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping("/name/{name}")
     public ResponseEntity<ProductResponseDTO> getProductByName(@PathVariable String name) {
         Product product = productService.getProductByName(name);
@@ -69,6 +74,7 @@ public class ProductController {
     }
 
     // GET /products/category/{categoryId}
+    @PreAuthorize("hasAnyAuthority('USER', 'ADMIN')")
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
         List<Product> products = productService.getProductsByCategory(categoryId);
@@ -80,6 +86,7 @@ public class ProductController {
     }
 
     // POST /products
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO requestDTO) {
         Product savedProduct = productService.createProduct(requestDTO.getName(), requestDTO.getDescription(), requestDTO.getPrice(), requestDTO.getStock(), requestDTO.getCategoryId(), requestDTO.getImageUrls());
@@ -89,6 +96,7 @@ public class ProductController {
     }
 
     // PUT /products/{id}
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequestDTO requestDTO) {
         Product currentProduct = productService.getProductById(id);
@@ -107,6 +115,7 @@ public class ProductController {
     }
 
     // DELETE /products/{id}
+    @PreAuthorize("hasAnyAuthority( 'ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         productService.deleteProductById(id);
