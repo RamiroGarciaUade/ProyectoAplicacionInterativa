@@ -37,20 +37,20 @@ public class UserController {
         return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
-    // GET /users/username/{username}
-    @GetMapping("/username/{username}")
-    public ResponseEntity<UserResponseDTO> getUserByUsername(@PathVariable String username) {
-        User user = userService.getUserByUsername(username);
+    // GET /users/email/{email}
+    @GetMapping("/email/{email}")
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        User user = userService.getUserByEmail(email);
         return ResponseEntity.ok(UserResponseDTO.fromUser(user));
     }
 
     // POST /users
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserRequestDTO requestDTO) {
-        User savedUser = userService.createUser(requestDTO.getUsername(), requestDTO.getEmail(), requestDTO.getAddress(), requestDTO.getPassword(), requestDTO.getImageUrl());
+        User savedUser = userService.createUser(requestDTO.getEmail(), requestDTO.getPassword(), requestDTO.getFirstName(), requestDTO.getLastName(), requestDTO.getAddress(), requestDTO.getImageUrl());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of("message", "Usuario " + savedUser.getUsername() + " creado con éxito"));
+                .body(Map.of("message", "Usuario de " + savedUser.getFullName() + " creado con éxito"));
     }
 
     // PUT /users/{id}
@@ -58,16 +58,17 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
         User currentUser = userService.getUserById(id);
 
-        String username = requestDTO.getUsername() != null ? requestDTO.getUsername() : currentUser.getUsername();
         String email = requestDTO.getEmail() != null ? requestDTO.getEmail() : currentUser.getEmail();
+        String firstName = requestDTO.getFirstName() != null ? requestDTO.getFirstName() : currentUser.getFirstName();
+        String lastName = requestDTO.getLastName() != null ? requestDTO.getLastName() : currentUser.getLastName();
         String address = requestDTO.getAddress() != null ? requestDTO.getAddress() : currentUser.getAddress();
         String password = requestDTO.getPassword() != null ? requestDTO.getPassword() : currentUser.getPassword();
         String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUser.getImageUrl();
 
-        User updatedUser = userService.updateUser(id, username, email, address, password, imageUrl);
+        User updatedUser = userService.updateUser(id, email, password, firstName, lastName, address, imageUrl);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(Map.of("message", "Usuario " + updatedUser.getUsername() + " actualizado con éxito"));
+                .body(Map.of("message", "Usuario de " + updatedUser.getFullName() + " actualizado con éxito"));
     }
 
     // DELETE /users/{id}
