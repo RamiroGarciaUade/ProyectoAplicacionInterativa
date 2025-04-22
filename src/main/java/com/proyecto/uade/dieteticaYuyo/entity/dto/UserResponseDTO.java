@@ -9,17 +9,19 @@ import lombok.Data;
 @Builder
 public class UserResponseDTO {
     private Long id;
-    private String username;
     private String email;
     private String address;
+    private String firstName;
+    private String lastName;
     private String imageUrl;
     private Role role;
 
     public static UserResponseDTO fromUser(User user) {
         return UserResponseDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .address(user.getAddress())
                 .imageUrl(user.getImageUrl())
                 .role(user.getRole())
