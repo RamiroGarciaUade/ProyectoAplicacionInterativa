@@ -1,5 +1,5 @@
 import React from "react";
-import ProductCard from "../components/ProductCard"; // Assuming ProductCard.jsx is in the same folder
+import ProductCardDetail from "../components/ProductCardDetail"; // Assuming ProductCard.jsx is in the same folder
 
 // Ejemplo de datos de producto
 const sampleProductData = {
@@ -71,7 +71,7 @@ const ProductPage = () => {
       </div>
 
       <main>
-        <ProductCard product={sampleProductData} />
+        <ProductCardDetail product={sampleProductData} />
       </main>
     </div>
   );

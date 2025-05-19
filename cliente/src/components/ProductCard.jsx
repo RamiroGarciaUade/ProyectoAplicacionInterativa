@@ -1,102 +1,55 @@
-import React, { useState } from "react";
-import exampleImage from "../images/exampleImage.jpg"; // Placeholder image
-
-const ShoppingCartIcon = ({ className }) => (
-  <svg
-    className={className}
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-    ></path>
-  </svg>
-);
+import React from "react";
+import exampleImage from "../images/exampleImage.jpg";
 
 const ProductCard = ({ product }) => {
-  const [quantity, setQuantity] = useState(1);
-
-  const handleQuantityChange = (amount) => {
-    setQuantity((prev) => Math.max(1, prev + amount));
-  };
-
-  // Calculate price per kg or unit if applicable
-  const pricePerKg =
-    product.price && product.weightInGrams
-      ? (product.price / (product.weightInGrams / 1000)).toFixed(2)
-      : null;
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Image Gallery */}
-        <div className="lg:w-1/2 flex flex-col items-center">
-          <div className="w-full max-w-md h-80 md:h-96   rounded-lg flex items-center justify-center mb-4 shadow-md overflow-hidden">
-            <img src={exampleImage} alt="Descripción de la imagen" />
-          </div>
-        </div>
+    <div className="group border border-gray-200 rounded-3xl shadow-sm p-4 max-w-[17rem] bg-white hover:shadow-md transition-all duration-300 flex flex-col items-center">
+      <div className="h-40 w-full overflow-hidden rounded-2xl mb-3 flex items-center justify-center">
+        <img
+          src={exampleImage}
+          alt={product.name}
+          className="object-contain w-full h-full"
+        />
+      </div>
+      <div className="w-full border-b-4 border-green-800 mb-3" />
+      <h2 className="text-lg font-bold mb-1 text-center truncate">
+        {product.name}
+      </h2>
+      {product.weightInGrams && (
+        <p className="text-xs text-gray-500 mb-1 text-center">
+          {product.weightInGrams}g
+        </p>
+      )}
+      <p className="text-green-800 font-extrabold text-2xl mb-3 text-center">
+        ${product.price.toFixed(3)}
+      </p>
 
-        {/* Product Information */}
-        <div className="lg:w-1/2">
-          <div className="flex justify-between items-start mb-5">
-            <h1 className="text-3xl md:text-4xl font-bold">{product.name}</h1>
-          </div>
-
-          {product.weightInGrams && (
-            <p className="text-sm mb-3">
-              {product.weightInGrams}g
-              {pricePerKg && <span className="ml-1">(${pricePerKg}/Kg)</span>}
-            </p>
-          )}
-
-          <div className="mb-6">
-            <span className="text-3xl font-bold text-green-600 mr-3">
-              ${product.price.toFixed(3)}
-            </span>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold  mb-1">Descripcion</h3>
-            <p className=" leading-relaxed text-sm">{product.description}</p>
-          </div>
-
-          {/* Quantity Selector */}
-          <div className="flex items-center mb-6">
-            <span className="mr-4 font-medium  dark:text-gray-300">
-              Quantity:
-            </span>
-            <button
-              onClick={() => handleQuantityChange(-1)}
-              className="px-3 py-1 border border-gray-300 rounded-l-md hover:bg-gray-100  focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              disabled={quantity <= 1}
-            >
-              -
-            </button>
-            <input
-              type="number"
-              value={quantity}
-              readOnly // Or use onChange for direct input, with validation
-              className="w-12 text-center border-t border-b border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+      <div className="flex justify-center gap-1 w-full transition-all duration-300 max-h-0 opacity-0 group-hover:max-h-32 group-hover:opacity-100 overflow-hidden mt-2">
+        <button className="bg-green-700 text-white font-bold rounded-full px-4 py-2 shadow-md transition-colors duration-200 hover:bg-green-600 text-xs pointer-events-auto">
+          COMPRAR
+        </button>
+        <button className="border-2 border-green-800 text-green-800 font-bold rounded-full px-4 py-2 bg-white transition-colors duration-200 text-xs pointer-events-auto flex items-center gap-1">
+          <span>VER</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="#016630"
+            className="w-4 h-4"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
             />
-            <button
-              onClick={() => handleQuantityChange(1)}
-              className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            >
-              +
-            </button>
-          </div>
-
-          {/* Add to Cart Button */}
-          <button className="w-full bg-green-800 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
-            <ShoppingCartIcon className="w-6 h-6 mr-2" />
-            AGREGAR AL CARRITO
-          </button>
-        </div>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+        </button>
       </div>
     </div>
   );
