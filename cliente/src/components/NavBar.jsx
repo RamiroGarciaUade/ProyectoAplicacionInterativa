@@ -37,12 +37,6 @@ const Navbar = () => {
               About
             </Link>
             <Link
-              to="/ProductPage"
-              className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
-            >
-              ProductDetail
-            </Link>
-            <Link
               to="/cart"
               className="text-green-600 hover:text-green-700 transition-colors duration-200"
             >

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const ProductCard = ({ product }) => {
   const imageUrl =
     product.imageUrls?.[0] ||
@@ -32,7 +34,10 @@ const ProductCard = ({ product }) => {
         <button className="bg-green-700 text-white font-bold rounded-full px-4 py-2 shadow-md transition-colors duration-200 hover:bg-green-600 text-xs">
           COMPRAR
         </button>
-        <button className="border-2 border-green-800 text-green-800 font-bold rounded-full px-4 py-2 bg-white transition-colors duration-200 text-xs flex items-center gap-1">
+        <Link
+          to={`/products/${product.id}`}
+          className="border-2 border-green-800 text-green-800 font-bold rounded-full px-4 py-2 bg-white transition-colors duration-200 text-xs flex items-center gap-1"
+        >
           <span>VER</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -53,7 +58,7 @@ const ProductCard = ({ product }) => {
               d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
             />
           </svg>
-        </button>
+        </Link>
       </div>
     </div>
   );

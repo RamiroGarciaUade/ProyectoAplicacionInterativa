@@ -1,44 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import ProductCardDetail from "../components/ProductCardDetail"; // Assuming ProductCard.jsx is in the same folder
+import { useParams, Link } from "react-router-dom";
 
-// Ejemplo de datos de producto
-const sampleProductData = {
-  id: "not-chori-123",
-  name: "Dulce de leche con stevia x 450 grs. Doña Magdalena",
-  flavor: "dulce",
-  weightInGrams: 450,
-  brand: {
-    name: "NotCo",
-    // logoUrl: '/path-to-notco-logo.png'
-  },
-  price: 6.989,
-  originalPrice: 7.765,
-  discountPercentage: 10,
-  description:
-    "Dulce de leche sin azúcar agregado, endulzado con stevia y libre de gluten, apto para celíacos. Producido y exportado por La Retama SRL, Magdalena, Pcia. de Bs. As.Peso neto: 450 gs.",
-  ingredients:
-    "Agua, aceite vegetal, proteínas vegetales, fibras, gluten de trigo, almidón, sal, espesante: metilcelulosa, saborizantes naturales, colorantes: rojo de remolacha.",
-  images: [
-    {
-      url: "https://via.placeholder.com/600x600.png?text=NotChori+Main",
-      alt: "NotChori Main View",
-    },
-    {
-      url: "https://via.placeholder.com/600x600.png?text=NotChori+Pack",
-      alt: "NotChori Packaging",
-    },
-    {
-      url: "https://via.placeholder.com/600x600.png?text=NotChori+Detail",
-      alt: "NotChori Detail",
-    },
-  ],
-  packageOptions: [
-    { label: "4u", subLabel: null, id: "pack-4u" },
-    { label: "60g/u", subLabel: "CHORIZO VEGETAL", id: "pack-60g" },
-  ],
-};
+const ProductDetail = () => {
+  const { productId } = useParams();
+  const [product, setProduct] = useState(null);
 
-const ProductPage = () => {
+  useEffect(() => {
+    fetch(`http://localhost:8080/products/${productId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setProduct(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching product data:", error);
+      });
+  }, [productId]);
+
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-8">Cargando producto...</div>
+    );
+  }
+
   return (
     <div className="min-h-screen ">
       <div className="container mx-auto px-4 py-3 mt-2 font-['Montserrat']">
@@ -46,9 +30,9 @@ const ProductPage = () => {
         <nav className="text-sm mt-4" aria-label="Breadcrumb">
           <ol className="list-none p-0 inline-flex">
             <li className="flex items-center">
-              <a href="/" className="hover:text-emerald-600 text-gray-500">
+              <Link to="/" className="hover:text-emerald-600 text-gray-500">
                 Home
-              </a>{" "}
+              </Link>{" "}
               <svg
                 className="fill-current w-3 h-3 mx-3 text-gray-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -64,17 +48,17 @@ const ProductPage = () => {
             </li>
             */}
             <li className="flex items-center font-['Montserrat']">
-              <span>{sampleProductData.name}</span>
+              <span>{product.name}</span>
             </li>
           </ol>
         </nav>
       </div>
 
       <main>
-        <ProductCardDetail product={sampleProductData} />
+        <ProductCardDetail product={product} />
       </main>
     </div>
   );
 };
 
-export default ProductPage;
+export default ProductDetail;

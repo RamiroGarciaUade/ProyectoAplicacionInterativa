@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import exampleImage from "../images/exampleImage.jpg"; // Placeholder image
+import { useState } from "react";
 
 const ShoppingCartIcon = ({ className }) => (
   <svg
@@ -18,13 +17,16 @@ const ShoppingCartIcon = ({ className }) => (
   </svg>
 );
 
-const ProductCard = ({ product }) => {
+const ProductCardDetail = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
 
   const handleQuantityChange = (amount) => {
     setQuantity((prev) => Math.max(1, prev + amount));
   };
 
+  const imageUrl =
+    product.imageUrls?.[0] ||
+    "https://via.placeholder.com/300x300?text=Sin+Imagen";
   // Calculate price per kg or unit if applicable
   const pricePerKg =
     product.price && product.weightInGrams
@@ -37,7 +39,7 @@ const ProductCard = ({ product }) => {
         {/* Image Gallery */}
         <div className="lg:w-1/2 flex flex-col items-center">
           <div className="w-full max-w-md h-80 md:h-96   rounded-lg flex items-center justify-center mb-4 shadow-md overflow-hidden">
-            <img src={exampleImage} alt="Descripción de la imagen" />
+            <img src={imageUrl} alt="Descripción de la imagen" />
           </div>
         </div>
 
@@ -56,7 +58,12 @@ const ProductCard = ({ product }) => {
 
           <div className="mb-6">
             <span className="text-3xl font-bold text-green-600 mr-3">
-              ${product.price.toFixed(3)}
+              {new Intl.NumberFormat("es-AR", {
+                style: "currency",
+                currency: "ARS",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(product.price)}
             </span>
           </div>
 
@@ -91,7 +98,6 @@ const ProductCard = ({ product }) => {
             </button>
           </div>
 
-          {/* Add to Cart Button */}
           <button className="w-full bg-green-800 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
             <ShoppingCartIcon className="w-6 h-6 mr-2" />
             AGREGAR AL CARRITO
@@ -102,4 +108,4 @@ const ProductCard = ({ product }) => {
   );
 };
 
-export default ProductCard;
+export default ProductCardDetail;
