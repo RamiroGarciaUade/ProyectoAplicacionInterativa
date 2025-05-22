@@ -1,12 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
+  const { isAuthenticated, logout } = useAuth();
 
   const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <nav className="bg-white shadow-md font-['Montserrat']">
@@ -63,6 +69,29 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="md:hidden flex items-center">
@@ -129,6 +158,29 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
