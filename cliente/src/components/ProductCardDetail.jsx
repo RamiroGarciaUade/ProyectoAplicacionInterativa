@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useCart } from "../context/CartContext";
 
 const ShoppingCartIcon = ({ className }) => (
   <svg
@@ -19,9 +20,19 @@ const ShoppingCartIcon = ({ className }) => (
 
 const ProductCardDetail = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
 
   const handleQuantityChange = (amount) => {
-    setQuantity((prev) => Math.max(1, prev + amount));
+    const newQuantity = quantity + amount;
+    if (newQuantity >= 1 && newQuantity <= product.stock) {
+      setQuantity(newQuantity);
+    }
+  };
+
+  const handleAddToCart = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
   };
 
   const imageUrl =
@@ -72,6 +83,15 @@ const ProductCardDetail = ({ product }) => {
             <p className=" leading-relaxed text-sm">{product.description}</p>
           </div>
 
+          {/* Stock Information */}
+          <div className="mb-4">
+            <p className={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {product.stock > 0 
+                ? `Stock disponible: ${product.stock} unidades`
+                : 'Sin stock disponible'}
+            </p>
+          </div>
+
           {/* Quantity Selector */}
           <div className="flex items-center mb-6">
             <span className="mr-4 font-medium  dark:text-gray-300">
@@ -93,14 +113,21 @@ const ProductCardDetail = ({ product }) => {
             <button
               onClick={() => handleQuantityChange(1)}
               className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-r-md hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              disabled={quantity >= product.stock}
             >
               +
             </button>
           </div>
 
-          <button className="w-full bg-green-800 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out">
+          <button
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+            className={`w-full bg-green-800 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out ${
+              product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
             <ShoppingCartIcon className="w-6 h-6 mr-2" />
-            AGREGAR AL CARRITO
+            {product.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
           </button>
         </div>
       </div>

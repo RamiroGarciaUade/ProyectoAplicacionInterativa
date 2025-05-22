@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItems } = useCart();
+
+  const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <nav className="bg-white shadow-md font-['Montserrat']">
@@ -38,7 +41,7 @@ const Navbar = () => {
             </Link>
             <Link
               to="/cart"
-              className="text-green-600 hover:text-green-700 transition-colors duration-200"
+              className="text-green-600 hover:text-green-700 transition-colors duration-200 relative"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -54,15 +57,17 @@ const Navbar = () => {
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
           </div>
 
           <div className="md:hidden flex items-center">
             <button
-              onClick={() => {
-                setIsMenuOpen(!isMenuOpen);
-                console.log(!isMenuOpen);
-              }}
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-green-600 hover:text-green-700 focus:outline-none transition-colors duration-200"
             >
               <svg
@@ -114,52 +119,16 @@ const Navbar = () => {
               About
             </Link>
             <Link
-              to="/ProductDetail"
-              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
-            >
-              ProductDetail
-            </Link>
-            <Link
               to="/cart"
-              className="w-full text-left px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200 relative"
             >
               Cart
+              {cartItemsCount > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 inline-flex items-center justify-center">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Cart Side Panel */}
-      {isCartOpen && (
-        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50">
-          <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-['Playfair_Display'] font-bold text-green-600">
-                Your Cart
-              </h2>
-              <button
-                onClick={() => setIsCartOpen(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="space-y-4">
-              {/* Aca van los productos */}
-              <p className="text-gray-500">Tu carrito esta vacio</p>
-            </div>
           </div>
         </div>
       )}
