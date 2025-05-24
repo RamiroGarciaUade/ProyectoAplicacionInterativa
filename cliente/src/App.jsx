@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "./components/NavBar";
 import Cart from "./pages/Cart";
 import Home from "./pages/Home";
@@ -8,12 +8,14 @@ import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import { AuthProvider } from "./context/AuthContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Routes, Route } from "react-router-dom";
 
 function App() {
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   return (
     <AuthProvider>
-      <Navbar />
+      <Navbar onLoginClick={() => setShowLogin(true)} />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -21,10 +23,27 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/products/:productId" element={<ProductDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
+
+      {showLogin && (
+        <Login
+          onClose={() => setShowLogin(false)}
+          onSwitch={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+        />
+      )}
+      {showRegister && (
+        <Register
+          onClose={() => setShowRegister(false)}
+          onSwitch={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+        />
+      )}
     </AuthProvider>
   );
 }

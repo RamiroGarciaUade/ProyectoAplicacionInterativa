@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
-const Navbar = () => {
+const Navbar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { cartItems } = useCart();
   const { isAuthenticated, logout } = useAuth();
 
-  const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItemsCount = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   const handleLogout = () => {
     logout();
@@ -78,18 +81,12 @@ const Navbar = () => {
               </button>
             ) : (
               <>
-                <Link
-                  to="/login"
+                <button
+                  onClick={onLoginClick}
                   className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
                 >
                   Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
-                >
-                  Register
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -167,18 +164,12 @@ const Navbar = () => {
               </button>
             ) : (
               <>
-                <Link
-                  to="/login"
+                <button
+                  onClick={onLoginClick}
                   className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
                 >
                   Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
-                >
-                  Register
-                </Link>
+                </button>
               </>
             )}
           </div>

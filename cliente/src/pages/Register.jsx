@@ -1,147 +1,150 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/authService';
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
+import { useNavigate } from "react-router-dom";
 
-const Register = () => {
+const Register = ({ onClose, onSwitch }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    address: '',
-    imageUrl: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    address: "",
+    imageUrl: "",
   });
-  const [error, setError] = useState('');
+
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setLoading(true);
 
     try {
       const data = await authService.register(formData);
+
+      if (!data || !data.access_token) {
+        throw new Error("No token returned");
+      }
+
       login(data.access_token);
-      navigate('/'); // Redirect to home page
+      onClose();
+      navigate("/");
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error("Registration error:", err);
+      setErrors({ general: "Registration failed. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="firstName" className="sr-only">First Name</label>
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="First Name"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="lastName" className="sr-only">Last Name</label>
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Last Name"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="address" className="sr-only">Address</label>
-              <input
-                id="address"
-                name="address"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Address"
-                value={formData.address}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label htmlFor="imageUrl" className="sr-only">Profile Image URL</label>
-              <input
-                id="imageUrl"
-                name="imageUrl"
-                type="text"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Profile Image URL (optional)"
-                value={formData.imageUrl}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
+      <div className="bg-white p-10 rounded-lg shadow-2xl w-96">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 text-gray-800 hover:text-red-500 text-xl font-bold"
+          aria-label="Cerrar"
+        >
+          x
+        </button>
 
-          <div>
+        <h2 className="text-center text-3xl font-bold mb-8 text-gray-800">
+          Registro
+        </h2>
+
+        {errors.general && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center text-sm">
+            {errors.general}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <input
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            placeholder="Nombre"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
+          />
+
+          <input
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Apellido"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
+          />
+
+          <input
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Correo electrónico"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            type="email"
+            required
+          />
+
+          <input
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Contraseña"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            type="password"
+            required
+          />
+
+          <input
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="Dirección"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
+          />
+
+          <input
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="URL de imagen (opcional)"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+            type="text"
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            {loading ? "Creando cuenta..." : "Registrarse"}
+          </button>
+
+          <div className="flex flex-col items-center mt-2">
+            <p className=" text-center text-sm text-gray-600">
+              ¿Ya tenes una cuenta?{" "}
+            </p>
             <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={onSwitch}
+              className="text-green-600 hover:underline font-semibold text-sm text-center mt-1"
+              type="button"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              Inicia sesion
             </button>
           </div>
         </form>
@@ -150,4 +153,4 @@ const Register = () => {
   );
 };
 
-export default Register; 
+export default Register;
