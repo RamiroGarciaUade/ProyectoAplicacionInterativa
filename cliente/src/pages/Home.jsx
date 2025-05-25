@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
-import Hero from "../components/Hero"; // Importa el componente Hero
-import ProductCard from "../components/ProductCard"; // Necesitas ProductCard para mostrar productos
+import Hero from "../components/Hero";
+import ProductCard from "../components/ProductCard";
+import ProductCarousel from "../components/ProductCarousel"; // Importa el carrusel
 import { Link } from "react-router-dom";
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [veganProducts, setVeganProducts] = useState([]); // Nuevo estado para productos veganos
   const [loadingFeatured, setLoadingFeatured] = useState(true);
   const [errorFeatured, setErrorFeatured] = useState(null);
+  const [loadingVegan, setLoadingVegan] = useState(true); // Nuevo estado de carga para veganos
+  const [errorVegan, setErrorVegan] = useState(null);     // Nuevo estado de error para veganos
 
-  // Efecto para cargar productos destacados (pueden ser los mismos que en Shop o una selección)
   useEffect(() => {
-    // Por simplicidad, aquí cargamos los primeros 4 productos.
-    // En un caso real, tu backend podría tener un endpoint para "productos destacados".
+    // Carga de Productos Destacados
     fetch("http://localhost:8080/products")
       .then((response) => {
         if (!response.ok) {
@@ -20,20 +22,31 @@ const Home = () => {
         return response.json();
       })
       .then((data) => {
-        // Tomamos los primeros 4 productos para mostrar como destacados
-        setFeaturedProducts(data.slice(0, 4));
+        setFeaturedProducts(data.slice(0, 4)); // Los primeros 4 como destacados
         setLoadingFeatured(false);
+
+        // Simulación de productos veganos (ajusta la lógica de filtrado según tus datos)
+        // Idealmente, tu backend te daría una propiedad 'isVegan' o una 'category'
+        const filteredVegan = data.filter(product =>
+          product.name.toLowerCase().includes('vegan') ||
+          product.description.toLowerCase().includes('vegano')
+        );
+        setVeganProducts(filteredVegan);
+        setLoadingVegan(false);
+
       })
       .catch((err) => {
-        console.error("Error al cargar productos destacados:", err);
+        console.error("Error al cargar productos:", err);
         setErrorFeatured("No se pudieron cargar los productos destacados.");
+        setErrorVegan("No se pudieron cargar los productos veganos.");
         setLoadingFeatured(false);
+        setLoadingVegan(false);
       });
   }, []);
 
   return (
     <>
-      <Hero /> {/* Seccion hero en la parte superior */}
+      <Hero />
 
       {/* Sección de Propuestas de Valor/Banners Pequeños */}
       <section className="py-12 bg-white">
@@ -90,7 +103,21 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Sección de Categorías Populares (Ejemplo) */}
+      {/* Nuevo Carrusel de Productos Veganos */}
+      {loadingVegan ? (
+        <div className="py-12 flex justify-center items-center bg-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          <p className="ml-4 text-green-700">Cargando productos veganos...</p>
+        </div>
+      ) : errorVegan ? (
+        <div className="py-12 text-center text-red-600 bg-white">
+          <p>{errorVegan}</p>
+        </div>
+      ) : (
+        <ProductCarousel title="Productos Veganos" products={veganProducts} />
+      )}
+
+      {/* Sección de Categorías Populares */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center mb-10">
