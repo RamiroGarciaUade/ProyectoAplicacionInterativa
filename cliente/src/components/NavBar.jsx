@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Importa useNavigate
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
   const { cartItems } = useCart();
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate(); // Inicializa useNavigate
 
   const cartItemsCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -15,6 +17,19 @@ const Navbar = ({ onLoginClick }) => {
 
   const handleLogout = () => {
     logout();
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault(); // Previene el comportamiento por defecto del formulario (recargar página)
+    if (searchTerm.trim()) { // Si el término de búsqueda no está vacío
+      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`); // Redirige a /shop con el término de búsqueda
+      setSearchTerm(""); // Limpia el campo de búsqueda
+      setIsMenuOpen(false); // Cierra el menú móvil si está abierto
+    }
   };
 
   return (
@@ -48,6 +63,26 @@ const Navbar = ({ onLoginClick }) => {
             >
               About
             </Link>
+            {/* Buscador en el Navbar */}
+            <form onSubmit={handleSearchSubmit} className="flex items-center">
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="border border-gray-300 rounded-l-md p-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+              />
+              <button
+                type="submit"
+                className="bg-green-700 text-white p-2 rounded-r-md hover:bg-green-600 transition-colors duration-200"
+                aria-label="Buscar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </form>
+
             <Link
               to="/cart"
               className="text-green-600 hover:text-green-700 transition-colors duration-200 relative"
@@ -92,6 +127,26 @@ const Navbar = ({ onLoginClick }) => {
           </div>
 
           <div className="md:hidden flex items-center">
+            {/* Buscador para menú móvil */}
+            <form onSubmit={handleSearchSubmit} className="flex items-center mr-4">
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="border border-gray-300 rounded-l-md p-2 text-sm w-24 focus:outline-none focus:ring-1 focus:ring-green-500"
+              />
+              <button
+                type="submit"
+                className="bg-green-700 text-white p-2 rounded-r-md hover:bg-green-600 transition-colors duration-200"
+                aria-label="Buscar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </form>
+            {/* Botón de menú hamburguesa */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-green-600 hover:text-green-700 focus:outline-none transition-colors duration-200"
