@@ -1,9 +1,118 @@
+import React, { useState, useEffect } from "react";
+import Hero from "../components/Hero"; // Importa el componente Hero
+import ProductCard from "../components/ProductCard"; // Necesitas ProductCard para mostrar productos
+import { Link } from "react-router-dom";
+
 const Home = () => {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [errorFeatured, setErrorFeatured] = useState(null);
+
+  // Efecto para cargar productos destacados (pueden ser los mismos que en Shop o una selección)
+  useEffect(() => {
+    // Por simplicidad, aquí cargamos los primeros 4 productos.
+    // En un caso real, tu backend podría tener un endpoint para "productos destacados".
+    fetch("http://localhost:8080/products")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error HTTP! Estado: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        // Tomamos los primeros 4 productos para mostrar como destacados
+        setFeaturedProducts(data.slice(0, 4));
+        setLoadingFeatured(false);
+      })
+      .catch((err) => {
+        console.error("Error al cargar productos destacados:", err);
+        setErrorFeatured("No se pudieron cargar los productos destacados.");
+        setLoadingFeatured(false);
+      });
+  }, []);
+
   return (
     <>
-      <div className="flex items-center justify-center min-h-screen">
-        Pagina Principal
-      </div>
+      <Hero /> {/* Seccion hero en la parte superior */}
+
+      {/* Sección de Propuestas de Valor/Banners Pequeños */}
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="bg-green-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-bold text-green-800 mb-2">Envíos Rápidos</h3>
+              <p className="text-gray-700">Recibe tus productos en la comodidad de tu hogar.</p>
+            </div>
+            <div className="bg-green-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-bold text-green-800 mb-2">Compra Segura</h3>
+              <p className="text-gray-700">Tus datos y pagos protegidos con tecnología avanzada.</p>
+            </div>
+            <div className="bg-green-100 p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-bold text-green-800 mb-2">Atención Personalizada</h3>
+              <p className="text-gray-700">Estamos aquí para ayudarte en lo que necesites.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sección de Productos Destacados */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center mb-10">
+            Productos Destacados
+          </h2>
+          {loadingFeatured ? (
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+              <p className="ml-4 text-green-700">Cargando destacados...</p>
+            </div>
+          ) : errorFeatured ? (
+            <div className="text-center text-red-600">
+              <p>{errorFeatured}</p>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">No hay productos destacados para mostrar.</p>
+          )}
+          <div className="text-center mt-10">
+            <Link
+              to="/shop"
+              className="inline-block bg-green-800 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-colors duration-300 shadow-lg"
+            >
+              Ver todos los productos
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Sección de Categorías Populares (Ejemplo) */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center mb-10">
+            Explora Nuestras Categorías
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Link to="/shop?category=alimentos" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+              <h3 className="text-xl font-bold text-green-700 mb-2">Alimentos Naturales</h3>
+              <p className="text-gray-600">Variedad de opciones orgánicas y saludables.</p>
+            </Link>
+            <Link to="/shop?category=suplementos" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+              <h3 className="text-xl font-bold text-green-700 mb-2">Suplementos Naturales</h3>
+              <p className="text-gray-600">Vitaminas, minerales y más para tu bienestar.</p>
+            </Link>
+            <Link to="/shop?category=cosmetica" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
+              <h3 className="text-xl font-bold text-green-700 mb-2">Cosmética Natural</h3>
+              <p className="text-gray-600">Cuidado personal con ingredientes puros.</p>
+            </Link>
+            {/* Agrega más categorías según sea necesario */}
+          </div>
+        </div>
+      </section>
     </>
   );
 };
