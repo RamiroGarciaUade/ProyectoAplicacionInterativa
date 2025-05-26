@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/NavBar";
-import Footer from "./components/Footer"; // Importa el Footer
+import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import About from "./pages/About";
@@ -9,8 +9,11 @@ import Cart from "./pages/Cart";
 import ProductDetail from "./pages/ProductDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Checkout from "./pages/Checkout";
+import Success from "./pages/Success";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
@@ -27,7 +30,16 @@ function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/about" element={<About />} />
             <Route path="/products/:productId" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart />} />
+            <Route path="/cart" element={<Cart onLoginClick={() => setShowLogin(true)} />} />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute onLoginClick={() => setShowLogin(true)}>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/success" element={<Success />} />
           </Routes>
         </main>
         {showLogin && (
@@ -48,7 +60,7 @@ function App() {
             }}
           />
         )}
-        <Footer /> {/* Renderiza el Footer aquí */}
+        <Footer />
       </CartProvider>
     </AuthProvider>
   );

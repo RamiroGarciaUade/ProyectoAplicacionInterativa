@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8080/auth"; // Adjust port if needed
+const API_URL = "http://localhost:8080/auth";
 
 export const authService = {
   async login(email, password) {
@@ -46,7 +46,6 @@ export const authService = {
       }
 
       const data = await response.json();
-      return data;
       return data;
     } catch (error) {
       throw error;

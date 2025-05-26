@@ -2,15 +2,15 @@ package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
 
-import com.proyecto.uade.dieteticaYuyo.entity.Role;
-import com.proyecto.uade.dieteticaYuyo.exceptions.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Role;
 import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
+import com.proyecto.uade.dieteticaYuyo.exceptions.UserNotFoundException;
 import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;
 
 @Service
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserByEmail(String email) throws UserNotFoundException {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     @Override

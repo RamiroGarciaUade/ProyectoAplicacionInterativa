@@ -1,22 +1,35 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
-import com.proyecto.uade.dieteticaYuyo.entity.*;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.PurchaseOrderRequestDTO;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.PurchaseOrderResponseDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import com.proyecto.uade.dieteticaYuyo.service.PurchaseOrderService;
-import com.proyecto.uade.dieteticaYuyo.service.ProductService;
-import com.proyecto.uade.dieteticaYuyo.service.UserService;
-
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.proyecto.uade.dieteticaYuyo.entity.Product;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseItem;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrder;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrderStatus;
+import com.proyecto.uade.dieteticaYuyo.entity.User;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.PurchaseOrderRequestDTO;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.PurchaseOrderResponseDTO;
+import com.proyecto.uade.dieteticaYuyo.service.ProductService;
+import com.proyecto.uade.dieteticaYuyo.service.PurchaseOrderService;
+import com.proyecto.uade.dieteticaYuyo.service.UserService;
 
 @RestController
 @RequestMapping("purchase-orders")
@@ -79,18 +92,36 @@ public class PurchaseOrderController {
     // POST /purchase-orders
     @PostMapping
     public ResponseEntity<?> createPurchaseOrder(@RequestBody PurchaseOrderRequestDTO requestDTO) {
-        User user = userService.getUserById(requestDTO.getUserId());
-        List<PurchaseItem> items = requestDTO.getItems().stream()
-                .map(purchaseItemDTO -> PurchaseItem.builder()
-                        .product(productService.getProductById(purchaseItemDTO.getProductId()))
-                        .quantity(purchaseItemDTO.getQuantity())
-                        .build())
-                .toList();
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userEmail = authentication.getName();
+            System.out.println("Creating purchase order for user: " + userEmail);
+            
+            User user = userService.getUserByEmail(userEmail);
+            System.out.println("Found user: " + user.getId());
 
-        PurchaseOrder savedPurchaseOrder = purchaseOrderService.createPurchaseOrder(user, items);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(Map.of("message", "Orden de compra número: " + savedPurchaseOrder.getId().toString() + " creada con éxito"));
+            List<PurchaseItem> items = requestDTO.getItems().stream()
+                    .map(purchaseItemDTO -> {
+                        Product product = productService.getProductById(purchaseItemDTO.getProductId());
+                        System.out.println("Processing item: " + product.getName() + " x " + purchaseItemDTO.getQuantity());
+                        return PurchaseItem.builder()
+                                .product(product)
+                                .quantity(purchaseItemDTO.getQuantity())
+                                .build();
+                    })
+                    .toList();
+
+            PurchaseOrder savedPurchaseOrder = purchaseOrderService.createPurchaseOrder(user, items);
+            System.out.println("Created purchase order with ID: " + savedPurchaseOrder.getId());
+            
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(Map.of("message", "Orden de compra número: " + savedPurchaseOrder.getId().toString() + " creada con éxito"));
+        } catch (Exception e) {
+            System.err.println("Error creating purchase order: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     // PUT /purchase-orders/{id}

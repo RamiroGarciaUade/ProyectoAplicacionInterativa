@@ -1,9 +1,20 @@
 import React from "react";
 import { useCart } from "../context/CartContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-const Cart = () => {
+const Cart = ({ onLoginClick }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleProceedToCheckout = () => {
+    if (!isAuthenticated) {
+      onLoginClick();
+    } else {
+      navigate("/checkout");
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -118,7 +129,10 @@ const Cart = () => {
               )}
             </span>
           </div>
-          <button className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-700 transition-colors">
+          <button
+            onClick={handleProceedToCheckout}
+            className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
+          >
             Proceder al pago
           </button>
         </div>
