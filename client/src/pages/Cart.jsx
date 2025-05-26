@@ -44,9 +44,6 @@ const Cart = () => {
                   />
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {item.weightInGrams}g
-                    </p>
                     <p className="text-green-800 font-medium">
                       {new Intl.NumberFormat("es-AR", {
                         style: "currency",

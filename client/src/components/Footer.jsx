@@ -1,12 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Newsletter subscription for:", email);
+    setEmail("");
+  };
+
   return (
     <footer className="bg-green-900 text-white py-10 font-['Montserrat']">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Columna 1: Institucional */}
           <div>
             <h3 className="text-lg font-bold mb-4">Institucional</h3>
             <ul>
@@ -38,7 +45,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Columna 2: Ayuda */}
           <div>
             <h3 className="text-lg font-bold mb-4">Ayuda</h3>
             <ul>
@@ -70,51 +76,13 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Columna 3: Contacto */}
           <div>
             <h3 className="text-lg font-bold mb-4">Contáctanos</h3>
             <p className="mb-2">📞 +54 9 11 2796-9705</p>
             <p className="mb-2">📧 info@dieteticayuyo.com.ar</p>
-            <div className="flex space-x-4 mt-4">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-green-300"
-              >
-                <svg
-                  fill="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="w-6 h-6"
-                  viewBox="0 0 24 24"
-                >
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01"></path>
-                </svg>
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-green-300"
-              >
-                <svg
-                  fill="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="w-6 h-6"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path>
-                </svg>
-              </a>
-            </div>
+            
           </div>
 
-          {/* Columna 4: Newsletter y Medios de Pago */}
           <div>
             <h3 className="text-lg font-bold mb-4">
               Recibí nuestras novedades
@@ -122,11 +90,14 @@ const Footer = () => {
             <p className="text-sm mb-4">
               Suscribite y recibí descuentos exclusivos.
             </p>
-            <form className="flex">
+            <form onSubmit={handleSubmit} className="flex">
               <input
                 type="email"
                 placeholder="Tu Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="p-2 rounded-l-md w-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400"
+                required
               />
               <button
                 type="submit"

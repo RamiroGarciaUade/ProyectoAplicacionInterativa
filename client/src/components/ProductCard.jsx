@@ -21,13 +21,9 @@ const ProductCard = ({ product }) => {
           className="object-contain w-full h-full"
         />
       </div>
-      <div className="w-[calc(100%+1.5rem)] -mx-3 border-b-3 border-green-800 mb-2" />
+      <div className="w-[calc(100%+1.5rem)] -mx-3 border-b-3 border-green-700 mb-2" />
       <h2 className="text-sm mb-1 text-center break-words w-full">{product.name}</h2>
-      {product.weightInGrams && (
-        <p className="text-[10px] text-gray-500 mb-1 text-center">
-          {product.weightInGrams}g
-        </p>
-      )}
+      
       <p className="text-green-800 text-base mb-2 text-center">
         {new Intl.NumberFormat("es-AR", {
           style: "currency",
@@ -43,7 +39,7 @@ const ProductCard = ({ product }) => {
         </button>
         <Link
           to={`/products/${product.id}`}
-          className="border-2 border-green-800 text-green-800 font-bold rounded-full px-3 py-1.5 bg-white transition-colors duration-200 text-[10px] flex items-center gap-1"
+          className="border-2 border-green-700 text-green-700 font-bold rounded-full px-3 py-1.5 bg-white transition-colors duration-200 text-[10px] flex items-center gap-1"
         >
           <span>VER</span>
           <svg

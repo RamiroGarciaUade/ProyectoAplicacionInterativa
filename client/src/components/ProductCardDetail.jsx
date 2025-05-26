@@ -38,7 +38,7 @@ const ProductCardDetail = ({ product }) => {
   const imageUrl =
     product.imageUrls?.[0] ||
     "https://via.placeholder.com/300x300?text=Sin+Imagen";
-  // Calculate price per kg or unit if applicable
+  // calcula el precio por kg o unidad si es aplicable
   const pricePerKg =
     product.price && product.weightInGrams
       ? (product.price / (product.weightInGrams / 1000)).toFixed(2)
@@ -47,14 +47,12 @@ const ProductCardDetail = ({ product }) => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Image Gallery */}
         <div className="lg:w-1/2 flex flex-col items-center">
           <div className="w-full max-w-md h-80 md:h-96   rounded-lg flex items-center justify-center mb-4 shadow-md overflow-hidden">
             <img src={imageUrl} alt="Descripción de la imagen" />
           </div>
         </div>
 
-        {/* Product Information */}
         <div className="lg:w-1/2">
           <div className="flex justify-between items-start mb-5">
             <h1 className="text-3xl md:text-4xl font-bold">{product.name}</h1>
@@ -83,7 +81,6 @@ const ProductCardDetail = ({ product }) => {
             <p className=" leading-relaxed text-sm">{product.description}</p>
           </div>
 
-          {/* Stock Information */}
           <div className="mb-4">
             <p className={`text-sm ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
               {product.stock > 0 
@@ -92,7 +89,6 @@ const ProductCardDetail = ({ product }) => {
             </p>
           </div>
 
-          {/* Quantity Selector */}
           <div className="flex items-center mb-6">
             <span className="mr-4 font-medium  dark:text-gray-300">
               Quantity:
@@ -107,7 +103,7 @@ const ProductCardDetail = ({ product }) => {
             <input
               type="number"
               value={quantity}
-              readOnly // Or use onChange for direct input, with validation
+              readOnly // o usa onChange para input directo, con validacion
               className="w-12 text-center border-t border-b border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
             <button
