@@ -36,7 +36,7 @@ const Login = ({ onClose, onSwitch }) => {
     setErrors({});
 
     try {
-      const data = await authService.login(formData.email, formData.password);
+      const data = await authService.login(formData.email, formData.password); // conectividad al back
       login(data.access_token);
       onClose();
       navigate("/");

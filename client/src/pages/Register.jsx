@@ -26,32 +26,79 @@ const Register = ({ onClose, onSwitch }) => {
     }));
   };
 
+  //
+  const validatePassword = (password) => {
+    const hasUpperCase = /[A-Z]/.test(password); // Al menos una mayúscula
+    const hasThreeNumbers = /\d.*\d.*\d/.test(password); // Al menos tres números
+    const hasSpecialChar = /[!@#$%^&*()_+\-={}[\]:;"'<>,.?/~]/.test(password); // Al menos un carácter especial
+    const isLongEnough = password.length >= 8; // Al menos 8 caracteres
+
+    return hasUpperCase && hasThreeNumbers && hasSpecialChar && isLongEnough;
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "El nombre del usuario es requerido.";
+    }
+    if (!formData.lastName.trim())
+      newErrors.lastName = "El apellido del usuario es requerido.";
+    if (!formData.email.trim()) {
+      newErrors.email = "El correo electrónico es requerido.";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email inválido.";
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = "La dirección es requerida.";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "La contraseña es requerida.";
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password =
+        "La contraseña debe contener una mayúscula, tres números y un carácter especial.";
+    }
+    return newErrors;
+  };
+  //
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors({});
+    const validationErrors = validate();
+    setErrors(validationErrors);
     setLoading(true);
 
-    try {
-      const data = await authService.register(formData);
+    if (Object.keys(validationErrors).length === 0) {
+      try {
+        const data = await authService.register(formData);
 
-      if (!data || !data.access_token) {
-        throw new Error("No token returned");
+        if (!data || !data.access_token) {
+          throw new Error("No token returned");
+        }
+
+        login(data.access_token);
+        onClose();
+        navigate("/");
+      } catch (err) {
+        console.error("Registration error:", err);
+        setErrors({ general: "Registration failed. Please try again." });
+      } finally {
+        setLoading(false);
       }
-
-      login(data.access_token);
-      onClose();
-      navigate("/");
-    } catch (err) {
-      console.error("Registration error:", err);
-      setErrors({ general: "Registration failed. Please try again." });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
-      <div className="bg-white p-10 rounded-lg shadow-2xl w-96">
+      <div
+        className="bg-white p-10 rounded-lg shadow-2xl w-96 max-w-[500px] max-h-[600px] overflow-auto"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          overflow: "auto",
+        }}
+      >
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-800 hover:text-red-500 text-xl font-bold"
@@ -70,35 +117,41 @@ const Register = ({ onClose, onSwitch }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5"
+          style={{ overflow: "hidden" }}
+        >
           <input
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
             placeholder="Nombre"
             className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            required
           />
-
+          {errors.firstName && (
+            <p className="text-sm text-red-500">{errors.firstName}</p>
+          )}
           <input
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
             placeholder="Apellido"
             className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            required
           />
-
+          {errors.lastName && (
+            <p className="text-sm text-red-500">{errors.lastName}</p>
+          )}
           <input
             name="email"
             value={formData.email}
             onChange={handleChange}
             placeholder="Correo electrónico"
             className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            type="email"
-            required
           />
-
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email}</p>
+          )}
           <input
             name="password"
             value={formData.password}
@@ -106,18 +159,20 @@ const Register = ({ onClose, onSwitch }) => {
             placeholder="Contraseña"
             className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
             type="password"
-            required
           />
-
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password}</p>
+          )}
           <input
             name="address"
             value={formData.address}
             onChange={handleChange}
             placeholder="Dirección"
             className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            required
           />
-
+          {errors.address && (
+            <p className="text-sm text-red-500">{errors.address}</p>
+          )}
           <input
             name="imageUrl"
             value={formData.imageUrl}
