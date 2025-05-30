@@ -17,6 +17,8 @@ public class ProductResponseDTO {
     private Integer stock;
     private Long categoryId;
     private List<String> imageUrls;
+    private BigDecimal discountPercentage;
+    
 
     public static ProductResponseDTO fromProduct(Product product) {
         return ProductResponseDTO.builder()
@@ -27,6 +29,7 @@ public class ProductResponseDTO {
                 .stock(product.getStock())
                 .categoryId(product.getCategoryId())
                 .imageUrls(product.getImageUrls())
+                .discountPercentage(product.getDiscountPercentage())
                 .build();
     }
 }

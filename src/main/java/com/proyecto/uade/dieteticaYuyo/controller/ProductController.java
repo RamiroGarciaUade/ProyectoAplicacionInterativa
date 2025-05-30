@@ -82,7 +82,7 @@ public class ProductController {
     // POST /products
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductRequestDTO requestDTO) {
-        Product savedProduct = productService.createProduct(requestDTO.getName(), requestDTO.getDescription(), requestDTO.getPrice(), requestDTO.getStock(), requestDTO.getCategoryId(), requestDTO.getImageUrls());
+        Product savedProduct = productService.createProduct(requestDTO.getName(), requestDTO.getDescription(), requestDTO.getPrice(), requestDTO.getStock(), requestDTO.getCategoryId(), requestDTO.getImageUrls(), requestDTO.getDiscountPercentage());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Producto " + savedProduct.getName() + " creado con éxito"));
@@ -94,13 +94,14 @@ public class ProductController {
         Product currentProduct = productService.getProductById(id);
 
         String name = requestDTO.getName() != null ? requestDTO.getName() : currentProduct.getName();
-        String description = requestDTO.getName() != null ? requestDTO.getDescription() : currentProduct.getDescription();
+        String description = requestDTO.getDescription() != null ? requestDTO.getDescription() : currentProduct.getDescription();
         BigDecimal price = requestDTO.getPrice() != null ? requestDTO.getPrice() : currentProduct.getPrice();
         Integer stock = requestDTO.getStock() != null ? requestDTO.getStock() : currentProduct.getStock();
         Long categoryId = requestDTO.getCategoryId() != null ? requestDTO.getCategoryId() : currentProduct.getCategoryId();
         List<String> imageUrls = requestDTO.getImageUrls() != null ? requestDTO.getImageUrls() : currentProduct.getImageUrls();
+        BigDecimal discountPercentage = requestDTO.getDiscountPercentage() != null ? requestDTO.getDiscountPercentage() : currentProduct.getDiscountPercentage(); // Obtener descuento
 
-        Product updatedProduct = productService.updateProduct(id, name, description, price, stock, categoryId, imageUrls);
+        Product updatedProduct = productService.updateProduct(id, name, description, price, stock, categoryId, imageUrls, discountPercentage);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "Producto " + updatedProduct.getName() + " actualizado con éxito"));

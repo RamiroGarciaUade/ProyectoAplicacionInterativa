@@ -13,4 +13,5 @@ public class ProductRequestDTO {
     private Integer stock;
     private Long categoryId;
     private List<String> imageUrls;
+    private BigDecimal discountPercentage;
 }

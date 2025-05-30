@@ -40,4 +40,9 @@ public class Product {
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
     private List<String> imageUrls;
+
+    @Column(name = "discount_percentage", precision = 5, scale = 2) // Nuevo campo para el porcentaje de descuento
+    @PositiveOrZero(message = "El porcentaje de descuento no puede ser negativo")
+    private BigDecimal discountPercentage; // Por ejemplo, 10.00 para un 10%
 }
+
