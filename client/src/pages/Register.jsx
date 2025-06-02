@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const Register = ({ onClose, onSwitch }) => {
   const [formData, setFormData] = useState({
+    username: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -38,6 +39,8 @@ const Register = ({ onClose, onSwitch }) => {
 
   const validate = () => {
     const newErrors = {};
+    if (!formData.username.trim())
+      newErrors.username = "El user name del usuario es requerido.";
     if (!formData.firstName.trim()) {
       newErrors.firstName = "El nombre del usuario es requerido.";
     }
@@ -122,6 +125,16 @@ const Register = ({ onClose, onSwitch }) => {
           className="space-y-5"
           style={{ overflow: "hidden" }}
         >
+          <input
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="User name"
+            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+          />
+          {errors.username && (
+            <p className="text-sm text-red-500">{errors.username}</p>
+          )}
           <input
             name="firstName"
             value={formData.firstName}

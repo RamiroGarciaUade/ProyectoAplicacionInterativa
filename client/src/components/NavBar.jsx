@@ -1,25 +1,24 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom"; // Importa useNavigate
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import AdminLink from "../components/AdminLink";
-import UserSearchForm from "../components/UserCart";
+import AdminLink from "../pages/AdminProduct";
+import UserCart from "../components/UserCart"; // Nuevo componente
 import jwt_decode from "jwt-decode";
 
 const Navbar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
   const { cartItems } = useCart();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, token } = useAuth();
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate(); // Inicializa useNavigate
 
   useEffect(() => {
-    if (isAuthenticated && logout) {
+    if (isAuthenticated && token) {
       try {
-        const decoded = jwt_decode(logout);
-        const role = decoded?.role || null;
-        setUserRole(role);
+        const decoded = jwt_decode(token);
+        setUserRole(decoded?.role || null);
       } catch (error) {
         console.error("Error decoding token:", error);
         setUserRole(null);
@@ -27,7 +26,7 @@ const Navbar = ({ onLoginClick }) => {
     } else {
       setUserRole(null);
     }
-  }, [isAuthenticated, logout]); // Se ejecuta cada vez que cambia `isAuthenticated` o `logout`
+  }, [isAuthenticated, token]);
 
   const cartItemsCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -56,6 +55,7 @@ const Navbar = ({ onLoginClick }) => {
     <nav className="bg-white shadow-md font-['Montserrat']">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
+          {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <span className="text-2xl font-['Merriweather'] font-bold text-green-700">
@@ -63,7 +63,7 @@ const Navbar = ({ onLoginClick }) => {
               </span>
             </Link>
           </div>
-
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
               to="/"
@@ -111,7 +111,12 @@ const Navbar = ({ onLoginClick }) => {
                 </svg>
               </button>
             </form>
-
+            {/* Role-specific Links */}
+            {(userRole === "USER" || userRole === null) && (
+              <UserCart count={cartItemsCount} />
+            )}
+            {userRole === "ADMIN" && <AdminLink />}
+            {/* Auth Buttons */}
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
@@ -131,8 +136,9 @@ const Navbar = ({ onLoginClick }) => {
             )}
           </div>
 
+          {/* Buscador para menú móvil */}
           <div className="md:hidden flex items-center">
-            {/* Buscador para menú móvil */}
+            {/* Mobile Search */}
             <form
               onSubmit={handleSearchSubmit}
               className="flex items-center mr-4"
@@ -163,7 +169,7 @@ const Navbar = ({ onLoginClick }) => {
                 </svg>
               </button>
             </form>
-            {/* Botón de menú hamburguesa */}
+            {/* Botón de alternancia */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-green-600 hover:text-green-700 focus:outline-none transition-colors duration-200"
@@ -194,7 +200,7 @@ const Navbar = ({ onLoginClick }) => {
           </div>
         </div>
       </div>
-
+      {/* Mobile Menu Content */}
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3">
@@ -216,17 +222,10 @@ const Navbar = ({ onLoginClick }) => {
             >
               About
             </Link>
-            <Link
-              to="/cart"
-              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200 relative"
-            >
-              Cart
-              {cartItemsCount > 0 && (
-                <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 inline-flex items-center justify-center">
-                  {cartItemsCount}
-                </span>
-              )}
-            </Link>
+            {userRole === "USER" && (
+              <UserCart count={cartItemsCount} isMobile />
+            )}
+            {userRole === "ADMIN" && <AdminLink isMobile />}
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
@@ -235,14 +234,12 @@ const Navbar = ({ onLoginClick }) => {
                 Logout
               </button>
             ) : (
-              <>
-                <button
-                  onClick={onLoginClick}
-                  className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
-                >
-                  Login
-                </button>
-              </>
+              <button
+                onClick={onLoginClick}
+                className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              >
+                Login
+              </button>
             )}
           </div>
         </div>
