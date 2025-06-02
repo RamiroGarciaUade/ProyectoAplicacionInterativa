@@ -4,9 +4,9 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import AdminLink from "../pages/AdminProduct";
 import UserCart from "../components/UserCart"; // Nuevo componente
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
-const Navbar = ({ onLoginClick }) => {
+const NavBar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
   const { cartItems } = useCart();
@@ -17,7 +17,7 @@ const Navbar = ({ onLoginClick }) => {
   useEffect(() => {
     if (isAuthenticated && token) {
       try {
-        const decoded = jwt_decode(token);
+        const decoded = jwtDecode(token);
         setUserRole(decoded?.role || null);
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -248,4 +248,4 @@ const Navbar = ({ onLoginClick }) => {
   );
 };
 
-export default Navbar;
+export default NavBar;

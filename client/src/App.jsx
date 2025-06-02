@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/NavBar";
+import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -22,7 +22,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <Navbar onLoginClick={() => setShowLogin(true)} />
+        <NavBar onLoginClick={() => setShowLogin(true)} />
         <main className="flex-grow">
           {" "}
           <Routes>
@@ -30,7 +30,10 @@ function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/about" element={<About />} />
             <Route path="/products/:productId" element={<ProductDetail />} />
-            <Route path="/cart" element={<Cart onLoginClick={() => setShowLogin(true)} />} />
+            <Route
+              path="/cart"
+              element={<Cart onLoginClick={() => setShowLogin(true)} />}
+            />
             <Route
               path="/checkout"
               element={
