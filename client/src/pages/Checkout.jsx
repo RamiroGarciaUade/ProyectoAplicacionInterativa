@@ -1,37 +1,137 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import AddressForm from "../components/AddressForm";
+import PaymentForm from "../components/PaymentForm";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, clearCart } = useCart();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const [useDefaultAddress, setUseDefaultAddress] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  useEffect(() => {
+    console.log('Datos del usuario:', {
+      user,
+      address: user?.address,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      hasAllFields: Boolean(user?.address && user?.firstName && user?.lastName)
+    });
+  }, [user]);
+
+  const [addressFormData, setAddressFormData] = useState({
+    firstName: user?.firstName || "",
+    lastName: user?.lastName || "",
+    address: user?.address || "",
+  });
+
+  const [paymentFormData, setPaymentFormData] = useState({
+    cardName: "",
+    cardNumber: "",
+    expiry: "",
+    cvv: "",
+  });
+
+  useEffect(() => {
+    console.log('Verificando dirección predeterminada:', {
+      hasAddress: Boolean(user?.address),
+      hasFirstName: Boolean(user?.firstName),
+      hasLastName: Boolean(user?.lastName),
+      allFieldsPresent: Boolean(user?.address && user?.firstName && user?.lastName)
+    });
+
+    if (user?.address && user?.firstName && user?.lastName) {
+      setUseDefaultAddress(true);
+      setAddressFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        address: user.address,
+      });
+    }
+  }, [user]);
+
+  const handleDefaultAddressChange = (e) => {
+    const isChecked = e.target.checked;
+    setUseDefaultAddress(isChecked);
+    
+    if (isChecked && user) {
+      setAddressFormData({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        address: user.address,
+      });
+    } else {
+      setAddressFormData({
+        firstName: "",
+        lastName: "",
+        address: "",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const validateForms = () => {
+      const isPaymentValid = 
+        paymentFormData.cardName &&
+        paymentFormData.cardNumber.replace(/\s/g, '').length === 16 &&
+        paymentFormData.expiry.length === 5 &&
+        paymentFormData.cvv.length === 3;
+
+      const isAddressValid = useDefaultAddress ? 
+        Boolean(user?.address && user?.firstName && user?.lastName) : 
+        (addressFormData.firstName &&
+         addressFormData.lastName &&
+         addressFormData.address);
+
+      console.log('Validación de formularios:', {
+        isPaymentValid,
+        isAddressValid,
+        useDefaultAddress,
+        userFields: {
+          address: user?.address,
+          firstName: user?.firstName,
+          lastName: user?.lastName
+        },
+        formFields: addressFormData
+      });
+
+      setIsFormValid(isPaymentValid && isAddressValid);
+    };
+
+    validateForms();
+  }, [useDefaultAddress, addressFormData, paymentFormData, user]);
 
   const handleCheckout = async () => {
     if (!token) {
-      // Idealmente, esto se manejaría con ProtectedRoute, pero como fallback:
       console.error("Usuario no autenticado. Redirigiendo a login...");
-      // Aquí podrías llamar a una función para mostrar el modal de login o redirigir.
-      navigate("/"); // O a una página de login si la tienes como ruta
+      navigate("/");
       return;
     }
 
     try {
+      const orderData = {
+        items: cartItems.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+        })),
+        shippingAddress: useDefaultAddress ? user.address : addressFormData.address,
+        paymentMethod: {
+          type: "CREDIT_CARD",
+          cardNumber: paymentFormData.cardNumber.replace(/\s/g, ''),
+          expiryDate: paymentFormData.expiry,
+        },
+      };
+
       const response = await fetch("http://localhost:8080/purchase-orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            // El backend calculará el subtotal basado en el precio del producto (con descuento si aplica) en el momento de la creación de la orden.
-            // No es necesario enviar el `effectivePrice` aquí, ya que el backend lo recalcula.
-          })),
-        }),
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
@@ -41,7 +141,6 @@ const Checkout = () => {
       }
 
       const data = await response.json();
-      // Asumiendo que el backend devuelve un mensaje como "Orden de compra número: XYZ creada con éxito"
       const orderIdMatch = data.message.match(/Orden de compra número: (\d+)/);
       const orderId = orderIdMatch ? orderIdMatch[1] : null;
       
@@ -53,7 +152,6 @@ const Checkout = () => {
       });
     } catch (error) {
       console.error("Error en el checkout:", error.message);
-      // Aquí podrías mostrar un mensaje de error al usuario en la UI
     }
   };
 
@@ -73,80 +171,168 @@ const Checkout = () => {
     );
   }
 
+  const hasDefaultAddress = Boolean(user?.address && user?.firstName && user?.lastName);
+
+  console.log('Estado final:', {
+    hasDefaultAddress,
+    useDefaultAddress,
+    userData: {
+      address: user?.address,
+      firstName: user?.firstName,
+      lastName: user?.lastName
+    }
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
         Finalizar Compra
       </h1>
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="divide-y divide-green-200">
-          {cartItems.map((item) => (
-            <div key={item.id} className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={item.imageUrls?.[0] || "https://via.placeholder.com/100"}
-                    alt={item.name}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                  <div>
-                    <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-green-800 font-medium">
-                      {/* Mostrar precio efectivo por unidad */}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Columna izquierda - Resumen del carrito */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Resumen del Carrito</h2>
+          <div className="divide-y divide-green-200">
+            {cartItems.map((item) => (
+              <div key={item.id} className="py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={item.imageUrls?.[0] || "https://via.placeholder.com/100"}
+                      alt={item.name}
+                      className="w-20 h-20 object-cover rounded-lg"
+                    />
+                    <div>
+                      <h3 className="font-medium text-gray-900">{item.name}</h3>
+                      <p className="text-green-800 font-medium">
+                        {new Intl.NumberFormat("es-AR", {
+                          style: "currency",
+                          currency: "ARS",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }).format(item.effectivePrice)}
+                        {item.discountPercentage && item.discountPercentage > 0 && (
+                          <span className="text-xs text-gray-500 line-through ml-2">
+                            {new Intl.NumberFormat("es-AR", {
+                              style: "currency",
+                              currency: "ARS",
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                            }).format(item.price)}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Cantidad: {item.quantity}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-medium text-green-800">
                       {new Intl.NumberFormat("es-AR", {
                         style: "currency",
                         currency: "ARS",
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0,
-                      }).format(item.effectivePrice)}
-                       {item.discountPercentage && item.discountPercentage > 0 && (
-                        <span className="text-xs text-gray-500 line-through ml-2">
-                          {new Intl.NumberFormat("es-AR", {
-                            style: "currency",
-                            currency: "ARS",
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(item.price)}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Cantidad: {item.quantity}
+                      }).format(item.effectivePrice * item.quantity)}
                     </p>
                   </div>
                 </div>
+              </div>
+            ))}
+            <div className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-20 h-20 flex items-center justify-center bg-green-50 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">Envío a domicilio</h3>
+                    <p className="text-green-600 font-medium">¡Gratis!</p>
+                  </div>
+                </div>
                 <div className="text-right">
-                  {/* Mostrar subtotal del ítem usando effectivePrice */}
-                  <p className="text-lg font-medium text-green-800">
-                    {new Intl.NumberFormat("es-AR", {
-                      style: "currency",
-                      currency: "ARS",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(item.effectivePrice * item.quantity)}
-                  </p>
+                  <p className="text-lg font-medium text-green-600">$0</p>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-        <div className="mt-8 border-t border-green-200 pt-4">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-lg font-medium">Total:</span>
-            {/* Usar totalAmount calculado con effectivePrice */}
-            <span className="text-2xl font-bold text-green-800">
-              {new Intl.NumberFormat("es-AR", {
-                style: "currency",
-                currency: "ARS",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              }).format(totalAmount)}
-            </span>
           </div>
+          <div className="mt-8 border-t border-green-200 pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-lg font-medium">Total:</span>
+              <span className="text-2xl font-bold text-green-800">
+                {new Intl.NumberFormat("es-AR", {
+                  style: "currency",
+                  currency: "ARS",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                }).format(totalAmount)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                id="useDefaultAddress"
+                checked={useDefaultAddress}
+                onChange={handleDefaultAddressChange}
+                disabled={!hasDefaultAddress}
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded disabled:opacity-50"
+              />
+              <label htmlFor="useDefaultAddress" className="ml-2 block text-sm text-gray-900">
+                {hasDefaultAddress 
+                  ? "Usar dirección predeterminada para la entrega"
+                  : "No tienes una dirección predeterminada configurada"}
+              </label>
+            </div>
+            
+            {!useDefaultAddress && (
+              <AddressForm
+                formData={addressFormData}
+                setFormData={setAddressFormData}
+              />
+            )}
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Método de Pago</h2>
+            <div className="mb-4">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="creditCard"
+                  name="paymentMethod"
+                  checked={true}
+                  readOnly
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300"
+                />
+                <label htmlFor="creditCard" className="ml-2 block text-sm text-gray-900">
+                  Tarjeta de crédito (VISA / Mastercard)
+                </label>
+              </div>
+            </div>
+            
+            <PaymentForm
+              formData={paymentFormData}
+              setFormData={setPaymentFormData}
+            />
+          </div>
+
           <button
             onClick={handleCheckout}
-            className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
-            disabled={cartItems.length === 0} // Deshabilitar si el carrito está vacío
+            disabled={!isFormValid}
+            className={`w-full py-3 rounded-lg transition-colors ${
+              isFormValid
+                ? "bg-green-800 text-white hover:bg-green-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
           >
             Confirmar Compra
           </button>

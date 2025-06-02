@@ -7,8 +7,9 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const login = (token) => {
+  const login = (token, userData) => {
     setToken(token);
+    setUser(userData);
     setLoading(false);
   };
 
