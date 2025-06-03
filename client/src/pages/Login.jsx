@@ -51,7 +51,6 @@ const Login = ({ onClose, onSwitch }) => {
       const data = await authService.login(formData.email, formData.password);
       login(data.access_token, data.user);
       onClose();
-      navigate("/");
     } catch (err) {
       setErrors({ general: "Email o contraseña incorrectos." });
     } finally {

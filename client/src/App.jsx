@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
+import Logout from "./pages/Logout";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -21,10 +22,11 @@ const AppContent = () => {
   const { notification, closeNotification, cartItemsCount } = useCart(); // Obtén el estado de la notificación
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar onLoginClick={() => setShowLogin(true)} />
+      {location.pathname !== '/logout' && <Navbar onLoginClick={() => setShowLogin(true)} />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -41,6 +43,7 @@ const AppContent = () => {
             }
           />
           <Route path="/success" element={<Success />} />
+          <Route path="/logout" element={<Logout />} />
         </Routes>
       </main>
       {showLogin && (
