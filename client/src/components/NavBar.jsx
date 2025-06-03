@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import AdminLink from "../pages/AdminProduct";
+import AdminLink from "../components/AdminLink";
 import UserCart from "../components/UserCart"; // Nuevo componente
 import { jwtDecode } from "jwt-decode";
 
@@ -34,7 +34,7 @@ const NavBar = ({ onLoginClick }) => {
   );
 
   const handleLogout = () => {
-    navigate('/logout');
+    navigate("/logout");
   };
 
   const handleSearchChange = (e) => {
@@ -111,10 +111,8 @@ const NavBar = ({ onLoginClick }) => {
                 </svg>
               </button>
             </form>
+            <UserCart count={cartItemsCount} />
             {/* Role-specific Links */}
-            {(userRole === "USER" || userRole === null) && (
-              <UserCart count={cartItemsCount} />
-            )}
             {userRole === "ADMIN" && <AdminLink />}
             {/* Auth Buttons */}
             {isAuthenticated ? (
@@ -222,9 +220,9 @@ const NavBar = ({ onLoginClick }) => {
             >
               About
             </Link>
-            {userRole === "USER" && (
-              <UserCart count={cartItemsCount} isMobile />
-            )}
+
+            <UserCart count={cartItemsCount} isMobile />
+
             {userRole === "ADMIN" && <AdminLink isMobile />}
             {isAuthenticated ? (
               <button

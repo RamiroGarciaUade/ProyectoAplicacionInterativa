@@ -2,6 +2,8 @@ package com.proyecto.uade.dieteticaYuyo.config;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -9,6 +11,8 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.proyecto.uade.dieteticaYuyo.entity.User;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -30,8 +34,18 @@ public class JwtService {
     private String buildToken( // Construye el token
             UserDetails userDetails,
             long expiration) {
+                
+        Map<String, Object> extraClaims = new HashMap<>();
+    
+        // Asumimos que el userDetails es una instancia de tu clase User que tiene getRole()
+        if (userDetails instanceof User) {
+            User user = (User) userDetails;
+            extraClaims.put("role", user.getRole().name()); // O solo user.getRole() si es String
+        }
+        extraClaims.put("authorities", userDetails.getAuthorities());
         return Jwts
                 .builder()
+                .claims(extraClaims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .claim("authorities", userDetails.getAuthorities())
