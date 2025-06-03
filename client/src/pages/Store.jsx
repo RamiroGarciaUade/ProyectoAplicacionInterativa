@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import ProductEdits from "../components/ProductEdits";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const Shop = () => {
+const Store = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -252,5 +252,4 @@ const Shop = () => {
     </div>
   );
 };
-
-export default Shop;
+export default Store;
