@@ -16,7 +16,23 @@ export const authService = {
       }
 
       const data = await response.json();
-      return data;
+      
+      const userResponse = await fetch(`http://localhost:8080/users/email/${email}`, {
+        headers: {
+          "Authorization": `Bearer ${data.access_token}`
+        }
+      });
+
+      if (!userResponse.ok) {
+        throw new Error("Failed to get user data");
+      }
+
+      const userData = await userResponse.json();
+      
+      return {
+        access_token: data.access_token,
+        user: userData
+      };
     } catch (error) {
       throw error;
     }

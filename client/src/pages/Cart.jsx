@@ -35,6 +35,11 @@ const Cart = ({ onLoginClick }) => {
     );
   }
 
+  const totalAmount = cartItems.reduce(
+    (total, item) => total + item.effectivePrice * item.quantity,
+    0
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-20">
       <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
@@ -56,12 +61,23 @@ const Cart = ({ onLoginClick }) => {
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
                     <p className="text-green-800 font-medium">
+                      {/* Mostrar precio efectivo por unidad */}
                       {new Intl.NumberFormat("es-AR", {
                         style: "currency",
                         currency: "ARS",
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0,
-                      }).format(item.price)}
+                      }).format(item.effectivePrice)} 
+                      {item.discountPercentage && item.discountPercentage > 0 && (
+                        <span className="text-xs text-gray-500 line-through ml-2">
+                          {new Intl.NumberFormat("es-AR", {
+                            style: "currency",
+                            currency: "ARS",
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                          }).format(item.price)}
+                        </span>
+                      )}
                     </p>
                     <p className="text-sm text-gray-500">
                       Stock disponible: {item.stock} unidades
@@ -93,6 +109,7 @@ const Cart = ({ onLoginClick }) => {
                   <button
                     onClick={() => removeFromCart(item.id)}
                     className="text-red-600 hover:text-red-800"
+                    aria-label={`Quitar ${item.name} del carrito`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -116,17 +133,13 @@ const Cart = ({ onLoginClick }) => {
           <div className="flex justify-between items-center mb-4">
             <span className="text-lg font-medium">Total:</span>
             <span className="text-2xl font-bold text-green-800">
+              {/* Usar totalAmount calculado con effectivePrice */}
               {new Intl.NumberFormat("es-AR", {
                 style: "currency",
                 currency: "ARS",
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
-              }).format(
-                cartItems.reduce(
-                  (total, item) => total + item.price * item.quantity,
-                  0
-                )
-              )}
+              }).format(totalAmount)}
             </span>
           </div>
           <button

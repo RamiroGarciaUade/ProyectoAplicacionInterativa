@@ -47,8 +47,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<Product> searchProductsByName(String searchTerm) { 
+        return productRepository.findByNameContainingIgnoreCase(searchTerm);
+    }
+
+    @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException {
+    public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException {
         if (productRepository.existsByName(name)) {
             throw new ProductDuplicateException(name);
         }
@@ -63,12 +68,13 @@ public class ProductServiceImpl implements ProductService {
                 .stock(stock)
                 .categoryId(categoryId)
                 .imageUrls(imageUrls)
+                .discountPercentage(discountPercentage)
                 .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException {
+    public Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException {
         Product product = getProductById(id);
         if (productRepository.existsByName(name) &&
                 !product.getName().equals(name)) {
@@ -84,6 +90,7 @@ public class ProductServiceImpl implements ProductService {
         product.setStock(stock);
         product.setCategoryId(categoryId);
         product.setImageUrls(imageUrls);
+        product.setDiscountPercentage(discountPercentage);
 
         return productRepository.save(product);
     }

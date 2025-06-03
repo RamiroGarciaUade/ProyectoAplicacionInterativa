@@ -1,5 +1,6 @@
 package com.proyecto.uade.dieteticaYuyo.entity.dto;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrder;
 import com.proyecto.uade.dieteticaYuyo.entity.User;
 import lombok.Data;
@@ -50,14 +51,24 @@ public class PurchaseOrderResponseDTO {
         userDto.setLastName(user.getLastName());
         dto.setUser(userDto);
 
-        List<ItemDetailDTO> items = order.getItems().stream().map(item -> {
-            ItemDetailDTO itemDto = new ItemDetailDTO();
-            itemDto.setProductId(item.getProduct().getId());
-            itemDto.setProductName(item.getProduct().getName());
-            itemDto.setUnitPrice(item.getProduct().getPrice());
-            itemDto.setQuantity(item.getQuantity());
-            return itemDto;
-        }).toList();
+
+    List<ItemDetailDTO> items = order.getItems().stream().map(item -> {
+        ItemDetailDTO itemDto = new ItemDetailDTO();
+        Product product = item.getProduct(); // Obtener el producto
+        itemDto.setProductId(product.getId());
+        itemDto.setProductName(product.getName());
+
+        BigDecimal effectivePrice = product.getPrice();
+        BigDecimal discount = product.getDiscountPercentage();
+        if (discount != null && discount.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discount.divide(new BigDecimal("100")));
+            effectivePrice = effectivePrice.multiply(discountMultiplier);
+        }
+        itemDto.setUnitPrice(effectivePrice); // Usar precio con descuento
+        itemDto.setQuantity(item.getQuantity());
+        return itemDto;
+    }).toList();
+
 
         dto.setItems(items);
         return dto;

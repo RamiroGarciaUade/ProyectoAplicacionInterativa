@@ -34,7 +34,7 @@ const NavBar = ({ onLoginClick }) => {
   );
 
   const handleLogout = () => {
-    logout();
+    navigate('/logout');
   };
 
   const handleSearchChange = (e) => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import NavBar from "./components/NavBar";
+import { Routes, Route, useLocation } from "react-router-dom";
+import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
@@ -11,14 +11,17 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
-import Store from "./pages/Store";
 import { AuthProvider } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
+import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import AddedToCartNotification from "./components/AddedToCartNotification"; // Importa el componente
 
-function App() {
+// Un componente wrapper para acceder al contexto del carrito
+const AppContent = () => {
+  const { notification, closeNotification, cartItemsCount } = useCart(); // Obtén el estado de la notificación
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const location = useLocation();
 
   return (
     <AuthProvider>
@@ -30,11 +33,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/about" element={<About />} />
-            <Route
-              path="/products/:productId"
-              element={<ProductDetail />}
-            ></Route>
-            <Route path="/store" element={<Store />} />
+            <Route path="/products/:productId" element={<ProductDetail />} />
             <Route
               path="/cart"
               element={<Cart onLoginClick={() => setShowLogin(true)} />}
@@ -72,6 +71,6 @@ function App() {
       </CartProvider>
     </AuthProvider>
   );
-}
+};
 
 export default App;

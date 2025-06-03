@@ -37,7 +37,8 @@ public class SecurityConfig {
                         .requestMatchers("/error/**").permitAll()
                         // Protegidas por User y Admin
                         .requestMatchers(HttpMethod.GET,
-                                "/purchase-orders/**"
+                                "/purchase-orders/**",
+                                "/users/email/**"
                         ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
                         .requestMatchers(HttpMethod.POST,
                                 "/purchase-orders"

@@ -73,10 +73,18 @@ public class PurchaseOrder {
     }
 
     private void calculateSubtotal() {
-        this.subtotal = items.stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+    this.subtotal = items.stream()
+            .map(item -> {
+                BigDecimal effectivePrice = item.getProduct().getPrice();
+                BigDecimal discount = item.getProduct().getDiscountPercentage();
+                if (discount != null && discount.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal discountMultiplier = BigDecimal.ONE.subtract(discount.divide(new BigDecimal("100")));
+                    effectivePrice = effectivePrice.multiply(discountMultiplier);
+                }
+                return effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+}
 
     @PrePersist
     public void prePersist() {

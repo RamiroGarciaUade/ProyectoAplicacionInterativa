@@ -19,11 +19,13 @@ public interface ProductService {
 
     Product getProductByName(String name) throws ProductNotFoundException;
 
+    List<Product> searchProductsByName(String searchTerm);
+
     List<Product> getProductsByCategory(Long categoryId);
 
-    Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
+    Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException; 
 
-    Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls) throws ProductDuplicateException;
+    Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException; 
 
     void deleteProductById(Long id);
 

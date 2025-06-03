@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../services/authService";
 
@@ -9,6 +9,18 @@ const Login = ({ onClose, onSwitch }) => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClose = () => {
+    if (location.pathname === "/checkout") {
+      navigate("/");
+      setTimeout(() => {
+        onClose();
+      }, 1);
+    } else {
+      onClose();
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,10 +48,9 @@ const Login = ({ onClose, onSwitch }) => {
     setErrors({});
 
     try {
-      const data = await authService.login(formData.email, formData.password); // conectividad al back
-      login(data.access_token);
+      const data = await authService.login(formData.email, formData.password);
+      login(data.access_token, data.user);
       onClose();
-      navigate("/");
     } catch (err) {
       setErrors({ general: "Email o contraseña incorrectos." });
     } finally {
@@ -51,7 +62,7 @@ const Login = ({ onClose, onSwitch }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30">
       <div className="bg-white p-10 rounded-xl shadow-2xl w-96">
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-3 right-3 text-gray-800 hover:text-red-500 text-2xl font-bold"
           aria-label="Cerrar"
         >
@@ -104,7 +115,7 @@ const Login = ({ onClose, onSwitch }) => {
 
           <div className="flex flex-col items-center mt-2">
             <p className=" text-center text-sm text-gray-600">
-              ¿No tenes una cuenta?{" "}
+              ¿No tenés una cuenta?{" "}
             </p>
             <button
               onClick={onSwitch}
