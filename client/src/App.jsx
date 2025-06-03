@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Logout from "./pages/Logout";
+import Store from "./pages/Store";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -49,6 +50,7 @@ const AppContent = () => {
           />
           <Route path="/success" element={<Success />} />
           <Route path="/logout" element={<Logout />} />
+          <Route path="/store" element={<Store />} />
         </Routes>
       </main>
       {showLogin && (
