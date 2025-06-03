@@ -26,14 +26,19 @@ const AppContent = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {location.pathname !== '/logout' && <Navbar onLoginClick={() => setShowLogin(true)} />}
+      {location.pathname !== "/logout" && (
+        <Navbar onLoginClick={() => setShowLogin(true)} />
+      )}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/about" element={<About />} />
           <Route path="/products/:productId" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart onLoginClick={() => setShowLogin(true)} />} />
+          <Route
+            path="/cart"
+            element={<Cart onLoginClick={() => setShowLogin(true)} />}
+          />
           <Route
             path="/checkout"
             element={
@@ -77,12 +82,14 @@ const AppContent = () => {
       )}
     </div>
   );
-}
+};
 
 function App() {
   return (
     <AuthProvider>
-      <CartProvider> {/* CartProvider envuelve AppContent */}
+      <CartProvider>
+        {" "}
+        {/* CartProvider envuelve AppContent */}
         <AppContent />
       </CartProvider>
     </AuthProvider>
