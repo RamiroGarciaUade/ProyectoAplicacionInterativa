@@ -37,11 +37,18 @@ public class SecurityConfig {
                         .requestMatchers("/error/**").permitAll()
                         // Protegidas por User y Admin
                         .requestMatchers(HttpMethod.GET,
-                                "/purchase-orders/**",
-                                "/users/email/**"
+                                "/purchase-orders/user/{id}",
+                                "/users/email/**",
+                                "/users/{id}"
                         ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET,
+                                "/purchase-orders/**"
+                        ).hasAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.POST,
                                 "/purchase-orders"
+                        ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT,
+                                "/users/{id}"
                         ).hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
                         // Protegidas por Admin
                         .requestMatchers(HttpMethod.POST,
@@ -54,8 +61,7 @@ public class SecurityConfig {
                                 "/products/{id}",
                                 "/purchase-orders/{id}",
                                 "/purchase-orders/{id}/confirm",
-                                "/purchase-orders/{id}/cancel",
-                                "/users/{id}"
+                                "/purchase-orders/{id}/cancel"
                         ).hasAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE,
                                 "/categories/{id}",
@@ -64,7 +70,7 @@ public class SecurityConfig {
                                 "/users/{id}"
                         ).hasAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.GET,
-                                "/users/**"
+                                "/users"
                         ).hasAuthority(Role.ADMIN.name())
                         .anyRequest()
                         .authenticated())

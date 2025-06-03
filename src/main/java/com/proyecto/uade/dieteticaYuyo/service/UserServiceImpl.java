@@ -64,7 +64,9 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));
+        if (!user.getPassword().equals(password)) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setAddress(address);

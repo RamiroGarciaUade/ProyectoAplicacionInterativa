@@ -12,6 +12,8 @@ import Register from "./pages/Register";
 import Checkout from "./pages/Checkout";
 import Success from "./pages/Success";
 import Logout from "./pages/Logout";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -34,6 +36,7 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/about" element={<About />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/products/:productId" element={<ProductDetail />} />
           <Route
             path="/cart"
@@ -49,6 +52,7 @@ const AppContent = () => {
           />
           <Route path="/success" element={<Success />} />
           <Route path="/logout" element={<Logout />} />
+          <Route path="/orders" element={<Orders />} />
         </Routes>
       </main>
       {showLogin && (

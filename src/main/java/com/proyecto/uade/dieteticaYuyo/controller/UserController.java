@@ -104,9 +104,7 @@ public class UserController {
         String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUserToUpdate.getImageUrl();
 
         User updatedUser = userService.updateUser(id, email, password, firstName, lastName, address, imageUrl);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(Map.of("message", "Usuario de " + updatedUser.getFullName() + " actualizado con éxito"));
+        return ResponseEntity.ok(UserResponseDTO.fromUser(updatedUser));
     }
 
     // DELETE /users/{id}

@@ -127,7 +127,7 @@ const ProductCard = ({ product }) => {
           disabled={product.stock === 0}
           className="bg-green-700 text-white font-bold rounded-full px-3 py-1.5 shadow-md transition-colors duration-200 hover:bg-green-600 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
         >
-          {product.stock === 0 ? "SIN STOCK" : "COMPRAR"}
+          {product.stock === 0 ? "SIN STOCK" : "AGREGAR"}
         </button>
         <Link
           to={`/products/${product.id}`}

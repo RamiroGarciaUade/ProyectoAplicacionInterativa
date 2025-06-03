@@ -6,7 +6,10 @@ const PaymentForm = ({ formData, setFormData }) => {
     let formattedValue = value;
 
     if (name === 'cardNumber') {
-      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+      formattedValue = value.replace(/\D/g, '')
+        .replace(/(\d{4})/g, '$1 ')
+        .trim()
+        .substr(0, 19);
     }
     else if (name === 'expiry') {
       formattedValue = value
