@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import AddedToCartNotification from "../components/AddedToCartNotification"; // Asegúrate que la ruta sea correcta
+import AddedToCartNotification from "../components/AddedToCartNotification";
 // import ProductCarousel from "../components/ProductCarousel"; // Descomenta si implementas productos relacionados
 
 const ProductDetail = () => {
@@ -11,9 +11,21 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProduct, setNotificationProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
   // const [relatedProducts, setRelatedProducts] = useState([]);
 
   const { addToCart, cartItems } = useCart();
+
+  useEffect(() => {
+    fetch("http://localhost:8080/categories")
+      .then((response) => response.json())
+      .then((data) => {
+        setCategories(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+      });
+  }, []);
 
   useEffect(() => {
     if (productId) {
@@ -63,7 +75,7 @@ const ProductDetail = () => {
         console.warn("No se puede agregar al carrito: sin stock o cantidad excede stock.");
         return;
     }
-    
+
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
@@ -92,6 +104,10 @@ const ProductDetail = () => {
 
   const currentCartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  const getCategoryName = (categoryId) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : 'No especificada';
+  };
 
   return (
     <>
@@ -137,8 +153,8 @@ const ProductDetail = () => {
               {product.imageUrls && product.imageUrls.length > 1 && (
                 <div className="flex space-x-2 overflow-x-auto p-1">
                   {product.imageUrls.map((url, index) => (
-                    <button 
-                      key={index} 
+                    <button
+                      key={index}
                       onClick={() => setSelectedImage(url)}
                       className={`w-16 h-16 sm:w-20 sm:h-20 border rounded-md overflow-hidden flex-shrink-0 transition-all duration-150 hover:opacity-80
                                   ${selectedImage === url ? 'border-green-500 border-2 ring-2 ring-green-300' : 'border-gray-300'}`}
@@ -154,7 +170,7 @@ const ProductDetail = () => {
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">{product.name}</h1>
               {/* Aquí puedes añadir info como marca o categoría si está disponible en 'product' */}
               {/* <p className="text-sm text-gray-500 mb-3">Categoría: {product.categoryName || 'General'}</p> */}
-              
+
               <div className="mb-4 mt-2">
                 {discountPercentage > 0 ? (
                   <div className="flex items-baseline gap-2">
@@ -185,7 +201,7 @@ const ProductDetail = () => {
                   {product.description || "No hay descripción disponible para este producto."}
                 </p>
               </div>
-              
+
               <div className="mb-5">
                 <p className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {product.stock > 0 ? `Disponibles: ${product.stock} unidades` : 'Producto sin stock'}
@@ -212,7 +228,7 @@ const ProductDetail = () => {
                     +
                   </button>
                 </div>
-                <button 
+                <button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0 || quantity > product.stock}
                   className={`flex-grow bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-5 rounded-md transition-all duration-150 text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50`}
@@ -220,10 +236,9 @@ const ProductDetail = () => {
                   {product.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
                 </button>
               </div>
-              
+
               <div className="border-t border-gray-200 pt-5 mt-auto text-sm text-gray-600">
-                {/* Aquí puedes añadir más información como categorías, tags, etc. */}
-                <p><span className="font-medium text-gray-700">Categoría:</span> {product.category?.name || 'No especificada'}</p>
+                <p><span className="font-medium text-gray-700">Categoría:</span> {getCategoryName(product.categoryId)}</p>
                 {/* <p><span className="font-medium text-gray-700">SKU:</span> {product.sku || 'N/D'}</p> */}
               </div>
             </div>
