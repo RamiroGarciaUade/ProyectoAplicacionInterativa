@@ -67,6 +67,16 @@ public class ProductController {
         Product product = productService.getProductByName(name);
         return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
     }
+    
+    // GET /products/search/{searchTerm}
+    @GetMapping("/search/{searchTerm}")
+    public ResponseEntity<List<ProductResponseDTO>> searchProductsByName(@PathVariable String searchTerm) {
+        List<Product> products = productService.searchProductsByName(searchTerm);
+        List<ProductResponseDTO> productDTOs = products.stream()
+                .map(ProductResponseDTO::fromProduct)
+                .toList();
+        return ResponseEntity.ok(productDTOs);
+    }
 
     // GET /products/category/{categoryId}
     @GetMapping("/category/{categoryId}")

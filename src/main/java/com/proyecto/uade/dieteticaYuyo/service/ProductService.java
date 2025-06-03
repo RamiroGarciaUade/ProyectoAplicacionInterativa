@@ -19,6 +19,8 @@ public interface ProductService {
 
     Product getProductByName(String name) throws ProductNotFoundException;
 
+    List<Product> searchProductsByName(String searchTerm);
+
     List<Product> getProductsByCategory(Long categoryId);
 
     Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException; 

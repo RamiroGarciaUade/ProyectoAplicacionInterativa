@@ -97,7 +97,7 @@ const Shop = () => {
         });
     } else if (searchTerm) {
       // si no hay categorias seleccionadas pero hay un termino de busqueda
-      url = `http://localhost:8080/products/name/${encodeURIComponent(searchTerm)}`;
+      url = `http://localhost:8080/products/search/${encodeURIComponent(searchTerm)}`;
       fetch(url)
         .then((response) => {
           if (!response.ok) {

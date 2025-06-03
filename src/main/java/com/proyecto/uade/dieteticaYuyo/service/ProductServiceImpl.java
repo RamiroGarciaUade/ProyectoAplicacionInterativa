@@ -47,6 +47,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<Product> searchProductsByName(String searchTerm) { 
+        return productRepository.findByNameContainingIgnoreCase(searchTerm);
+    }
+
+    @Override
     @Transactional(rollbackFor = Throwable.class)
     public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException {
         if (productRepository.existsByName(name)) {
