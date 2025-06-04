@@ -2,22 +2,23 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const AdminUsers = () => {
+const AdminProducts = () => {
   const { token } = useAuth();
-  const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const fetchUsers = async () => {
+  const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8080/users", {
+      const res = await fetch("http://localhost:8080/products", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al cargar usuarios");
+      if (!res.ok) throw new Error("Error al cargar productos");
       const data = await res.json();
-      setUsers(data);
+      setProducts(data);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -25,34 +26,55 @@ const AdminUsers = () => {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/categories", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Error al cargar categorías");
+      const data = await res.json();
+      setCategories(data);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  const getCategoryName = (categoryId) => {
+    const cat = categories.find(c => c.id === categoryId);
+    return cat ? cat.name : "-";
+  };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que querés borrar este usuario?")) return;
+    if (!window.confirm("¿Seguro que querés borrar este producto?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/users/${id}`, {
+      const res = await fetch(`http://localhost:8080/products/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Error al borrar usuario");
-      setUsers(users.filter(u => u.id !== id));
+      if (!res.ok) throw new Error("Error al borrar producto");
+      setProducts(products.filter(p => p.id !== id));
     } catch (e) {
       alert(e.message);
     }
   };
 
-  if (loading) return <div>Cargando usuarios...</div>;
+  if (loading) return <div>Cargando productos...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
+    <div className="max-w-6xl mx-auto py-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-green-800 font-['Merriweather']">Panel de Usuarios</h1>
+        <h1 className="text-2xl font-bold text-green-800 font-['Merriweather']">Panel de Productos</h1>
         <button
           className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 font-medium"
-          onClick={() => navigate("/admin/users/new")}
+          onClick={() => navigate("/admin/products/new")}
         >
-          Crear usuario
+          Crear producto
         </button>
       </div>
       <table className="w-full border rounded-lg bg-white">
@@ -60,24 +82,24 @@ const AdminUsers = () => {
           <tr className="bg-green-100">
             <th className="py-2 px-4 text-left font-semibold">ID</th>
             <th className="py-2 px-4 text-left font-semibold">Nombre</th>
-            <th className="py-2 px-4 text-left font-semibold">Apellido</th>
-            <th className="py-2 px-4 text-left font-semibold">Email</th>
-            <th className="py-2 px-4 text-left font-semibold">Rol</th>
+            <th className="py-2 px-4 text-left font-semibold">Precio</th>
+            <th className="py-2 px-4 text-left font-semibold">Stock</th>
+            <th className="py-2 px-4 text-left font-semibold">Categoría</th>
             <th className="py-2 px-4 text-left font-semibold">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
-            <tr key={user.id} className="border-t">
-              <td className="py-2 px-4 text-left">{user.id}</td>
-              <td className="py-2 px-4 text-left">{user.firstName}</td>
-              <td className="py-2 px-4 text-left">{user.lastName}</td>
-              <td className="py-2 px-4 text-left">{user.email}</td>
-              <td className="py-2 px-4 text-left">{user.role === "ADMIN" ? "Administrador" : "Usuario"}</td>
+          {products.map(product => (
+            <tr key={product.id} className="border-t">
+              <td className="py-2 px-4 text-left">{product.id}</td>
+              <td className="py-2 px-4 text-left">{product.name}</td>
+              <td className="py-2 px-4 text-left">${product.price}</td>
+              <td className="py-2 px-4 text-left">{product.stock}</td>
+              <td className="py-2 px-4 text-left">{getCategoryName(product.categoryId)}</td>
               <td className="py-2 px-4 flex gap-2">
                 <button
                   className="bg-green-700 hover:bg-green-800 text-white p-2 rounded transition-colors"
-                  onClick={() => navigate(`/admin/users/${user.id}`)}
+                  onClick={() => navigate(`/admin/products/${product.id}`)}
                   title="Editar"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -86,7 +108,7 @@ const AdminUsers = () => {
                 </button>
                 <button
                   className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition-colors"
-                  onClick={() => handleDelete(user.id)}
+                  onClick={() => handleDelete(product.id)}
                   title="Borrar"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -102,4 +124,4 @@ const AdminUsers = () => {
   );
 };
 
-export default AdminUsers; 
+export default AdminProducts; 

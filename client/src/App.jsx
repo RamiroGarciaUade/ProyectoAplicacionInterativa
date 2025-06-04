@@ -21,6 +21,8 @@ import AddedToCartNotification from "./components/AddedToCartNotification"; // I
 import AdminRoute from "./routes/AdminRoute";
 import AdminUsers from "./pages/admin/AdminUsers";
 import EditUser from "./pages/admin/EditUser";
+import AdminProducts from "./pages/admin/AdminProducts";
+import EditProduct from "./pages/admin/EditProduct";
 
 // Un componente wrapper para acceder al contexto del carrito
 const AppContent = () => {
@@ -64,6 +66,16 @@ const AppContent = () => {
           <Route path="/admin/users/:id" element={
             <AdminRoute>
               <EditUser />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products" element={
+            <AdminRoute>
+              <AdminProducts />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products/:id" element={
+            <AdminRoute>
+              <EditProduct />
             </AdminRoute>
           } />
         </Routes>
