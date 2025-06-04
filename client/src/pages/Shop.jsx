@@ -53,9 +53,44 @@ const Shop = () => {
     const sortType = queryParams.get("sort");
 
     let url = "http://localhost:8080/products";
-    
-    // si hay categorias seleccionadas, busca los productos para cada categoria
-    if (selectedCategories.length > 0) {
+
+    if (searchTerm && selectedCategories.length > 0) {
+      url = `http://localhost:8080/products/search/${encodeURIComponent(searchTerm)}`;
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Error HTTP! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          let productsData = Array.isArray(data) ? data : [data];
+          const filtered = productsData.filter(product => selectedCategories.includes(product.categoryId));
+          if (sortType) {
+            filtered.sort((a, b) => {
+              switch (sortType) {
+                case "name_asc":
+                  return a.name.localeCompare(b.name);
+                case "name_desc":
+                  return b.name.localeCompare(a.name);
+                case "price_asc":
+                  return parseFloat(a.price) - parseFloat(b.price);
+                case "price_desc":
+                  return parseFloat(b.price) - parseFloat(a.price);
+                default:
+                  return 0;
+              }
+            });
+          }
+          setProducts(filtered);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching products:", err);
+          setError("Error al cargar los productos. Intenta de nuevo más tarde.");
+          setIsLoading(false);
+        });
+    } else if (selectedCategories.length > 0) {
       Promise.all(
         selectedCategories.map(categoryId =>
           fetch(`http://localhost:8080/products/category/${categoryId}`)
@@ -68,7 +103,7 @@ const Shop = () => {
           const uniqueProducts = Array.from(
             new Map(allProducts.map(product => [product.id, product])).values()
           );
-          
+
           // si hay un tipo de ordenamiento, ordena los productos
           if (sortType) {
             uniqueProducts.sort((a, b) => {
