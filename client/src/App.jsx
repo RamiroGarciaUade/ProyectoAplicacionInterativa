@@ -23,6 +23,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import EditUser from "./pages/admin/EditUser";
 import AdminProducts from "./pages/admin/AdminProducts";
 import EditProduct from "./pages/admin/EditProduct";
+import AdminCategories from "./pages/admin/AdminCategories";
+import EditCategory from "./pages/admin/EditCategory";
 
 // Un componente wrapper para acceder al contexto del carrito
 const AppContent = () => {
@@ -76,6 +78,16 @@ const AppContent = () => {
           <Route path="/admin/products/:id" element={
             <AdminRoute>
               <EditProduct />
+            </AdminRoute>
+          } />
+          <Route path="/admin/categories" element={
+            <AdminRoute>
+              <AdminCategories />
+            </AdminRoute>
+          } />
+          <Route path="/admin/categories/:id" element={
+            <AdminRoute>
+              <EditCategory />
             </AdminRoute>
           } />
         </Routes>
