@@ -19,6 +19,9 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -50,10 +53,18 @@ const Profile = () => {
           address: userData.address || '',
           firstName: userData.firstName || '',
           lastName: userData.lastName || '',
-          imageUrl: userData.imageUrl || '',
+          imageUrl: userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '',
           role: userData.role || ''
         });
-        setOriginalData(userData);
+        setImagePreview(userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '');
+        setOriginalData({
+          email: userData.email || '',
+          address: userData.address || '',
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
+          imageUrl: userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '',
+          role: userData.role || ''
+        });
         setIsLoading(false);
       } catch (err) {
         setError('Error al cargar los datos del usuario');
@@ -74,10 +85,21 @@ const Profile = () => {
       ...prev,
       [name]: value
     }));
+    setDirty(true);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+      setDirty(true);
+    }
   };
 
   const hasChanges = () => {
     if (!originalData) return false;
+    if (imageFile) return true;
     return Object.keys(formData).some(key => formData[key] !== originalData[key]);
   };
 
@@ -87,13 +109,20 @@ const Profile = () => {
     setSuccess(false);
 
     try {
+      const data = new FormData();
+      data.append('email', formData.email);
+      data.append('address', formData.address);
+      data.append('firstName', formData.firstName);
+      data.append('lastName', formData.lastName);
+      if (formData.role) data.append('role', formData.role);
+      if (imageFile) data.append('image', imageFile);
+
       const response = await fetch(`http://localhost:8080/users/${user.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: data
       });
 
       if (!response.ok) {
@@ -102,8 +131,22 @@ const Profile = () => {
 
       const updatedUser = await response.json();
       updateUser(updatedUser);
-      setOriginalData(updatedUser);
+      setOriginalData({
+        email: updatedUser.email || '',
+        address: updatedUser.address || '',
+        firstName: updatedUser.firstName || '',
+        lastName: updatedUser.lastName || '',
+        imageUrl: updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : '',
+        role: updatedUser.role || ''
+      });
+      setImageFile(null);
+      setImagePreview(updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : '');
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : ''
+      }));
       setSuccess(true);
+      setDirty(false);
     } catch (err) {
       setError('Error al actualizar los datos');
     }
@@ -138,9 +181,9 @@ const Profile = () => {
           <div className="flex justify-center mb-6">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                {formData.imageUrl ? (
+                {imagePreview ? (
                   <img 
-                    src={formData.imageUrl} 
+                    src={imagePreview} 
                     alt="Perfil" 
                     className="w-full h-full object-cover"
                   />
@@ -150,15 +193,22 @@ const Profile = () => {
                   </svg>
                 )}
               </div>
-              <button
-                type="button"
-                className="absolute bottom-0 right-0 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors duration-200"
+              <label
+                htmlFor="profile-image-upload"
+                className="absolute bottom-0 right-0 bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors duration-200 cursor-pointer"
                 title="Editar imagen"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-              </button>
+                <input
+                  id="profile-image-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleImageChange}
+                />
+              </label>
             </div>
           </div>
 

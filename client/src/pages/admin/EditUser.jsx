@@ -74,14 +74,20 @@ const EditUser = () => {
       let res;
       let updatedUserData = user;
       if (isNew) {
-        const userToSend = { ...user, password };
+        const data = new FormData();
+        data.append("firstName", user.firstName);
+        data.append("lastName", user.lastName);
+        data.append("email", user.email);
+        data.append("address", user.address);
+        data.append("password", password);
+        data.append("role", user.role);
+
         res = await fetch(`http://localhost:8080/users`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(userToSend),
+          body: data,
         });
       } else {
         res = await fetch(`http://localhost:8080/users/role/${id}`, {

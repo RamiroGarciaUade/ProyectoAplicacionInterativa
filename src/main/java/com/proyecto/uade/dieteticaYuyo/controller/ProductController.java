@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductRequestDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductResponseDTO;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductImageDTO;
 import com.proyecto.uade.dieteticaYuyo.service.ProductService;
 
 @RestController
@@ -90,16 +92,16 @@ public class ProductController {
 
     // POST /products
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createProduct(
-            @RequestParam("name") String name,
-            @RequestParam("description") String description,
-            @RequestParam("price") BigDecimal price,
-            @RequestParam("stock") Integer stock,
-            @RequestParam("categoryId") Long categoryId,
-            @RequestParam(value = "image", required = false) MultipartFile image,
-            @RequestParam(value = "discountPercentage", required = false) BigDecimal discountPercentage) {
-        
-        Product savedProduct = productService.createProduct(name, description, price, stock, categoryId, image, discountPercentage);
+    public ResponseEntity<?> createProduct(ProductRequestDTO request) {
+        Product savedProduct = productService.createProduct(
+            request.getName(),
+            request.getDescription(),
+            request.getPrice(),
+            request.getStock(),
+            request.getCategoryId(),
+            request.getImage(),
+            request.getDiscountPercentage()
+        );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Producto " + savedProduct.getName() + " creado con éxito"));
@@ -107,17 +109,17 @@ public class ProductController {
 
     // PUT /products/{id}
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updateProduct(
-            @PathVariable Long id,
-            @RequestParam("name") String name,
-            @RequestParam("description") String description,
-            @RequestParam("price") BigDecimal price,
-            @RequestParam("stock") Integer stock,
-            @RequestParam("categoryId") Long categoryId,
-            @RequestParam(value = "image", required = false) MultipartFile image,
-            @RequestParam(value = "discountPercentage", required = false) BigDecimal discountPercentage) {
-        
-        Product updatedProduct = productService.updateProduct(id, name, description, price, stock, categoryId, image, discountPercentage);
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, ProductRequestDTO request) {
+        Product updatedProduct = productService.updateProduct(
+            id,
+            request.getName(),
+            request.getDescription(),
+            request.getPrice(),
+            request.getStock(),
+            request.getCategoryId(),
+            request.getImage(),
+            request.getDiscountPercentage()
+        );
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(Map.of("message", "Producto " + updatedProduct.getName() + " actualizado con éxito"));
@@ -125,11 +127,8 @@ public class ProductController {
 
     // POST /products/{id}/image
     @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadProductImage(
-            @PathVariable Long id,
-            @RequestParam("image") MultipartFile image) {
-        
-        Product updatedProduct = productService.uploadProductImage(id, image);
+    public ResponseEntity<?> uploadProductImage(@PathVariable Long id, ProductImageDTO request) {
+        Product updatedProduct = productService.uploadProductImage(id, request.getImage());
         return ResponseEntity.ok(Map.of("message", "Imagen del producto actualizada con éxito"));
     }
 

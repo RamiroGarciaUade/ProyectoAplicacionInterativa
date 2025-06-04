@@ -1,5 +1,6 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.service.UserService;
 import com.proyecto.uade.dieteticaYuyo.entity.Role;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("users")
@@ -70,8 +72,8 @@ public class UserController {
     }
 
     // POST /users
-    @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody UserRequestDTO requestDTO) {
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<?> createUser(UserRequestDTO requestDTO) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userService.getUserByEmail(auth.getName());
         
@@ -79,15 +81,22 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        User savedUser = userService.createUser(requestDTO.getEmail(), requestDTO.getPassword(), requestDTO.getFirstName(), requestDTO.getLastName(), requestDTO.getAddress(), requestDTO.getImageUrl());
+        User savedUser = userService.createUser(
+            requestDTO.getEmail(),
+            requestDTO.getPassword(),
+            requestDTO.getFirstName(),
+            requestDTO.getLastName(),
+            requestDTO.getAddress(),
+            requestDTO.getImage()
+        );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(Map.of("message", "Usuario de " + savedUser.getFullName() + " creado con éxito"));
     }
 
     // PUT /users/{id}
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDTO requestDTO) {
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> updateUser(@PathVariable Long id, UserRequestDTO requestDTO) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userService.getUserByEmail(auth.getName());
         
@@ -102,9 +111,9 @@ public class UserController {
         String lastName = requestDTO.getLastName() != null ? requestDTO.getLastName() : currentUserToUpdate.getLastName();
         String address = requestDTO.getAddress() != null ? requestDTO.getAddress() : currentUserToUpdate.getAddress();
         String password = requestDTO.getPassword() != null ? requestDTO.getPassword() : currentUserToUpdate.getPassword();
-        String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUserToUpdate.getImageUrl();
+        MultipartFile image = requestDTO.getImage() != null ? requestDTO.getImage() : getUserImageMultipartFile(currentUserToUpdate);
 
-        User updatedUser = userService.updateUser(id, email, password, firstName, lastName, address, imageUrl);
+        User updatedUser = userService.updateUser(id, email, password, firstName, lastName, address, image);
         return ResponseEntity.ok(UserResponseDTO.fromUser(updatedUser));
     }
 
@@ -118,10 +127,10 @@ public class UserController {
         String lastName = requestDTO.getLastName() != null ? requestDTO.getLastName() : currentUserToUpdate.getLastName();
         String address = requestDTO.getAddress() != null ? requestDTO.getAddress() : currentUserToUpdate.getAddress();
         String password = requestDTO.getPassword() != null ? requestDTO.getPassword() : currentUserToUpdate.getPassword();
-        String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUserToUpdate.getImageUrl();
+        MultipartFile image = requestDTO.getImage() != null ? requestDTO.getImage() : getUserImageMultipartFile(currentUserToUpdate);
         Role role = requestDTO.getRole() != null ? requestDTO.getRole() : currentUserToUpdate.getRole();
 
-        User updatedUser = userService.updateUserWithRole(id, email, password, firstName, lastName, address, imageUrl, role);
+        User updatedUser = userService.updateUserWithRole(id, email, password, firstName, lastName, address, image, role);
         return ResponseEntity.ok(UserResponseDTO.fromUser(updatedUser));
     }
 
@@ -137,5 +146,20 @@ public class UserController {
 
         userService.deleteUserById(id);
         return ResponseEntity.ok(Map.of("message", "Usuario eliminado con éxito"));
+    }
+
+    private MultipartFile getUserImageMultipartFile(User user){
+        byte[] bytes;
+        try {
+            bytes = user.getImageData().getBytes(1, (int) user.getImageData().length());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return new MockMultipartFile(
+                "image",
+                "user-image.jpg",
+                user.getImageType(),
+                bytes
+        );
     }
 }

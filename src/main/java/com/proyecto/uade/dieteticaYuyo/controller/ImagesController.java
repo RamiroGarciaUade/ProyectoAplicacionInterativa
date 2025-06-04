@@ -1,7 +1,7 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
-import com.proyecto.uade.dieteticaYuyo.dto.AddFileRequest;
-import com.proyecto.uade.dieteticaYuyo.dto.ImageResponse;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.AddFileRequestDTO;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ImageResponseDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.Image;
 import com.proyecto.uade.dieteticaYuyo.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +22,15 @@ public class ImagesController {
     private ImageService imageService;
 
     @GetMapping
-    public ResponseEntity<ImageResponse> displayImage(@RequestParam("id") Long id) throws IOException, SQLException {
+    public ResponseEntity<ImageResponseDTO> displayImage(@RequestParam("id") Long id) throws SQLException {
         Image image = imageService.viewById(id);
         String encodedString = Base64.getEncoder()
                 .encodeToString(image.getImage().getBytes(1, (int) image.getImage().length()));
-        return ResponseEntity.ok().body(ImageResponse.builder().file(encodedString).id(id).build());
+        return ResponseEntity.ok().body(ImageResponseDTO.builder().file(encodedString).id(id).build());
     }
 
     @PostMapping
-    public String addImagePost(AddFileRequest request) throws IOException, SQLException {
+    public String addImagePost(AddFileRequestDTO request) throws IOException, SQLException {
         byte[] bytes = request.getFile().getBytes();
         Blob blob = new SerialBlob(bytes);
         imageService.create(Image.builder().image(blob).build());

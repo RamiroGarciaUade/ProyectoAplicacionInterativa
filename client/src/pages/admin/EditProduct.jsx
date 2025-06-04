@@ -19,6 +19,8 @@ const EditProduct = () => {
   const [loading, setLoading] = useState(!isNew);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [imageFile, setImageFile] = useState(null);
+  const [imageFileName, setImageFileName] = useState("");
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -80,6 +82,12 @@ const EditProduct = () => {
     setProduct({ ...product, discountPercentage: value });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImageFile(file);
+    setImageFileName(file ? file.name : "");
+  };
+
   const hasChanges = () => {
     if (isNew) {
       return (
@@ -97,7 +105,8 @@ const EditProduct = () => {
       String(product.price) !== String(originalProduct.price) ||
       String(product.stock) !== String(originalProduct.stock) ||
       String(product.categoryId) !== String(originalProduct.categoryId) ||
-      product.discountPercentage !== originalProduct.discountPercentage
+      product.discountPercentage !== originalProduct.discountPercentage ||
+      imageFile
     );
   };
 
@@ -105,23 +114,31 @@ const EditProduct = () => {
     e.preventDefault();
     try {
       let res;
+      const formData = new FormData();
+      formData.append("name", product.name);
+      formData.append("description", product.description);
+      formData.append("price", product.price);
+      formData.append("stock", product.stock);
+      formData.append("categoryId", product.categoryId);
+      formData.append("discountPercentage", product.discountPercentage);
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
       if (isNew) {
         res = await fetch(`http://localhost:8080/products`, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(product),
+          body: formData,
         });
       } else {
         res = await fetch(`http://localhost:8080/products/${id}`, {
           method: "PUT",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(product),
+          body: formData,
         });
       }
       if (!res.ok) throw new Error(isNew ? "Error al crear producto" : "Error al actualizar producto");
@@ -182,6 +199,23 @@ const EditProduct = () => {
               className="w-16 border rounded px-2 py-1 text-center bg-gray-100"
             />
             <button type="button" onClick={() => handleDiscountStep(5)} className="bg-gray-200 px-3 py-1 rounded text-lg font-bold" tabIndex={-1}>+</button>
+          </div>
+        </div>
+        <div>
+          <label className="block text-gray-700">Imagen</label>
+          <div className="flex items-center gap-2">
+            <span className="flex-1 px-3 py-2 border rounded bg-gray-50 text-gray-700">
+              {imageFileName || "Ningún archivo seleccionado"}
+            </span>
+            <label className="bg-green-200 text-green-900 px-4 py-2 rounded cursor-pointer hover:bg-green-300 font-medium">
+              Seleccionar archivo
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
         <div className="flex gap-4 mt-6">
