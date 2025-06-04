@@ -9,8 +9,8 @@ const statusColors = {
 
 const statusLabels = {
   PENDING: "Pendiente",
-  CONFIRMED: "Confirmado",
-  CANCELLED: "Cancelado"
+  CONFIRMED: "Confirmada",
+  CANCELLED: "Cancelada"
 };
 
 const AdminOrders = () => {

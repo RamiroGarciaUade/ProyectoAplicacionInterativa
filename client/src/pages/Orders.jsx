@@ -27,9 +27,9 @@ const Orders = () => {
       case 'PENDING':
         return 'PENDIENTE';
       case 'CONFIRMED':
-        return 'CONFIRMADO';
+        return 'CONFIRMADA';
       case 'CANCELLED':
-        return 'CANCELADO';
+        return 'CANCELADA';
       default:
         return status;
     }
@@ -94,7 +94,7 @@ const Orders = () => {
       ) : (
         <div className="space-y-6">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
+            <div key={order.id} className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">

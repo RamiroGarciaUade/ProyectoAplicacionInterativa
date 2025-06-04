@@ -199,9 +199,15 @@ const Checkout = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <img
-                      src={item.imageUrls?.[0] || "https://via.placeholder.com/100"}
+                      src={item.imageData
+                        ? `data:${item.imageType};base64,${item.imageData}`
+                        : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen"}
                       alt={item.name}
                       className="w-20 h-20 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://placehold.co/300x300/EBF5FB/17202A?text=Error";
+                      }}
                     />
                     <div>
                       <h3 className="font-medium text-gray-900">{item.name}</h3>
