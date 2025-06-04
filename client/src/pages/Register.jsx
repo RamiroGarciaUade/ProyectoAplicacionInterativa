@@ -10,7 +10,6 @@ const Register = ({ onClose, onSwitch }) => {
     email: "",
     password: "",
     address: "",
-    imageUrl: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -28,12 +27,7 @@ const Register = ({ onClose, onSwitch }) => {
 
   //
   const validatePassword = (password) => {
-    const hasUpperCase = /[A-Z]/.test(password); // Al menos una mayúscula
-    const hasThreeNumbers = /\d.*\d.*\d/.test(password); // Al menos tres números
-    const hasSpecialChar = /[!@#$%^&*()_+\-={}[\]:;"'<>,.?/~]/.test(password); // Al menos un carácter especial
-    const isLongEnough = password.length >= 8; // Al menos 8 caracteres
-
-    return hasUpperCase && hasThreeNumbers && hasSpecialChar && isLongEnough;
+    return password.length >= 8;
   };
 
   const validate = () => {
@@ -56,8 +50,7 @@ const Register = ({ onClose, onSwitch }) => {
     if (!formData.password.trim()) {
       newErrors.password = "La contraseña es requerida.";
     } else if (!validatePassword(formData.password)) {
-      newErrors.password =
-        "La contraseña debe contener una mayúscula, tres números y un carácter especial.";
+      newErrors.password = "La contraseña debe tener al menos 8 caracteres.";
     }
     return newErrors;
   };
@@ -74,18 +67,24 @@ const Register = ({ onClose, onSwitch }) => {
         const data = await authService.register(formData);
 
         if (!data || !data.access_token) {
-          throw new Error("No token returned");
+          throw new Error("No se recibió token de acceso");
         }
 
-        login(data.access_token);
+        login(data.access_token, data.user);
         onClose();
         navigate("/");
       } catch (err) {
-        console.error("Registration error:", err);
-        setErrors({ general: "Registration failed. Please try again." });
+        console.error("Error en el registro:", err);
+        setErrors({ 
+          general: err.message === "Registration failed" 
+            ? "Error al registrar. Por favor, intente nuevamente." 
+            : err.message 
+        });
       } finally {
         setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   };
 
@@ -173,14 +172,6 @@ const Register = ({ onClose, onSwitch }) => {
           {errors.address && (
             <p className="text-sm text-red-500">{errors.address}</p>
           )}
-          <input
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            placeholder="URL de imagen (opcional)"
-            className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-            type="text"
-          />
 
           <button
             type="submit"
