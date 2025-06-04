@@ -3,9 +3,9 @@ import { useCart } from "../context/CartContext"; // Asegúrate que la ruta sea 
 import { Link } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
-  const imageUrl =
-    product.imageUrls?.[0] ||
-    "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen"; // Placeholder actualizado
+  const imageUrl = product.imageData
+    ? `data:${product.imageType};base64,${product.imageData}`
+    : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
 
   const { addToCart } = useCart();
 

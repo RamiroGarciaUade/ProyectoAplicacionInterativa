@@ -8,7 +8,6 @@ const ProductDetail = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProduct, setNotificationProduct] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -33,16 +32,6 @@ const ProductDetail = () => {
         .then((response) => response.json())
         .then((data) => {
           setProduct(data);
-          if (data.imageUrls && data.imageUrls.length > 0) {
-            setSelectedImage(data.imageUrls[0]);
-          }
-          // Ejemplo para cargar productos relacionados (ajusta según tu API)
-          // if (data.categoryId) {
-          //   fetch(`http://localhost:8080/products/category/${data.categoryId}?exclude=${productId}&limit=4`) // Suponiendo que tu API soporta esto
-          //     .then(res => res.json())
-          //     .then(setRelatedProducts)
-          //     .catch(err => console.error("Error fetching related products:", err));
-          // }
         })
         .catch((error) => {
           console.error("Error fetching product data:", error);
@@ -71,9 +60,8 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!product || product.stock === 0 || quantity > product.stock) {
-        // Opcional: mostrar un error si se intenta agregar más del stock
-        console.warn("No se puede agregar al carrito: sin stock o cantidad excede stock.");
-        return;
+      console.warn("No se puede agregar al carrito: sin stock o cantidad excede stock.");
+      return;
     }
 
     for (let i = 0; i < quantity; i++) {
@@ -82,9 +70,9 @@ const ProductDetail = () => {
 
     setNotificationProduct({
       name: product.name,
-      image: selectedImage || product.imageUrls?.[0],
+      image: product.imageData ? `data:${product.imageType};base64,${product.imageData}` : null,
       price: calculateDiscountedPrice(product.price, product.discountPercentage),
-      quantity: quantity, // Para mostrar la cantidad agregada en la notificación si se desea
+      quantity: quantity,
     });
     setShowNotification(true);
   };
@@ -108,6 +96,10 @@ const ProductDetail = () => {
     const category = categories.find(cat => cat.id === categoryId);
     return category ? category.name : 'No especificada';
   };
+
+  const imageUrl = product.imageData
+    ? `data:${product.imageType};base64,${product.imageData}`
+    : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
 
   return (
     <>
@@ -139,10 +131,9 @@ const ProductDetail = () => {
             <div className="lg:w-1/2 flex flex-col">
               <div className="border border-gray-200 rounded-lg overflow-hidden mb-3 h-80 sm:h-96 md:h-[450px] flex items-center justify-center bg-gray-100 relative">
                 <img
-                  src={selectedImage || product.imageUrls?.[0] || "https://via.placeholder.com/400x400?text=Sin+Imagen"}
+                  src={imageUrl}
                   alt={product.name}
                   className="max-w-full max-h-full object-contain transition-opacity duration-300"
-                  key={selectedImage} // Para forzar re-render en cambio de imagen si es necesario
                 />
                 {discountPercentage > 0 && (
                   <span className="absolute top-3 right-3 bg-red-600 text-white text-xs sm:text-sm font-semibold px-2.5 py-1 rounded-md shadow-lg">
