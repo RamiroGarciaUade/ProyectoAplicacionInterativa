@@ -72,7 +72,14 @@ const EditUser = () => {
     e.preventDefault();
     try {
       let res;
-      let updatedUserData = user;
+      let updatedUserData = { ...user };
+      const allowedFields = ["email", "password", "firstName", "lastName", "address", "role"];
+      Object.keys(updatedUserData).forEach(key => {
+        if (!allowedFields.includes(key) || updatedUserData[key] === undefined) {
+          delete updatedUserData[key];
+        }
+      });
+      if (!updatedUserData.password) delete updatedUserData.password;
       if (isNew) {
         const data = new FormData();
         data.append("firstName", user.firstName);
@@ -81,7 +88,9 @@ const EditUser = () => {
         data.append("address", user.address);
         data.append("password", password);
         data.append("role", user.role);
-
+        if (user.image && typeof user.image !== "string") {
+          data.append("image", user.image);
+        }
         res = await fetch(`http://localhost:8080/users`, {
           method: "POST",
           headers: {
@@ -96,7 +105,7 @@ const EditUser = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(user),
+          body: JSON.stringify(updatedUserData),
         });
       }
       if (!res.ok) throw new Error(isNew ? "Error al crear usuario" : "Error al actualizar usuario");

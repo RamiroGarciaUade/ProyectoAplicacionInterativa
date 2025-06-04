@@ -149,6 +149,9 @@ public class UserController {
     }
 
     private MultipartFile getUserImageMultipartFile(User user){
+        if (user.getImageData() == null) {
+            return null;
+        }
         byte[] bytes;
         try {
             bytes = user.getImageData().getBytes(1, (int) user.getImageData().length());
