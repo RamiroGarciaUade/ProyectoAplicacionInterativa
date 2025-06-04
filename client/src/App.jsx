@@ -18,6 +18,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AddedToCartNotification from "./components/AddedToCartNotification"; // Importa el componente
+import AdminRoute from "./routes/AdminRoute";
+import AdminUsers from "./pages/admin/AdminUsers";
+import EditUser from "./pages/admin/EditUser";
 
 // Un componente wrapper para acceder al contexto del carrito
 const AppContent = () => {
@@ -53,6 +56,16 @@ const AppContent = () => {
           <Route path="/success" element={<Success />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          } />
+          <Route path="/admin/users/:id" element={
+            <AdminRoute>
+              <EditUser />
+            </AdminRoute>
+          } />
         </Routes>
       </main>
       {showLogin && (

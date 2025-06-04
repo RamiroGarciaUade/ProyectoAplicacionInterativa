@@ -77,6 +77,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
+    public User updateUserWithRole(Long id, String email, String password, String firstName, String lastName, String address, String imageUrl, Role role) throws UserDuplicateException {
+        User user = getUserById(id);
+        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
+            throw new UserDuplicateException(email);
+        }
+
+        user.setEmail(email);
+        if (!user.getPassword().equals(password)) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setAddress(address);
+        user.setImageUrl(imageUrl);
+        user.setRole(role);
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
     public void deleteUserById(Long id) {
         User user = getUserById(id);
         userRepository.delete(user);

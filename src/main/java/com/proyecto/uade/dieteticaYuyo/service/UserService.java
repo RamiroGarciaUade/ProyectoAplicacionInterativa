@@ -18,6 +18,8 @@ public interface UserService {
 
     User updateUser(Long id, String email, String password, String firstName, String lastName, String address, String imageUrl) throws UserDuplicateException;
 
+    User updateUserWithRole(Long id, String email, String password, String firstName, String lastName, String address, String imageUrl, Role role) throws UserDuplicateException;
+
     void deleteUserById(Long id);
 
 }

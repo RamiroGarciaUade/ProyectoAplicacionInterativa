@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.proyecto.uade.dieteticaYuyo.entity.dto.UserRequestDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.UserResponseDTO;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.UserWithRoleRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -104,6 +105,23 @@ public class UserController {
         String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUserToUpdate.getImageUrl();
 
         User updatedUser = userService.updateUser(id, email, password, firstName, lastName, address, imageUrl);
+        return ResponseEntity.ok(UserResponseDTO.fromUser(updatedUser));
+    }
+
+    // PUT /users/role/{id}
+    @PutMapping("/role/{id}")
+    public ResponseEntity<?> updateUserWithRole(@PathVariable Long id, @RequestBody UserWithRoleRequestDTO requestDTO) {
+        User currentUserToUpdate = userService.getUserById(id);
+
+        String email = requestDTO.getEmail() != null ? requestDTO.getEmail() : currentUserToUpdate.getEmail();
+        String firstName = requestDTO.getFirstName() != null ? requestDTO.getFirstName() : currentUserToUpdate.getFirstName();
+        String lastName = requestDTO.getLastName() != null ? requestDTO.getLastName() : currentUserToUpdate.getLastName();
+        String address = requestDTO.getAddress() != null ? requestDTO.getAddress() : currentUserToUpdate.getAddress();
+        String password = requestDTO.getPassword() != null ? requestDTO.getPassword() : currentUserToUpdate.getPassword();
+        String imageUrl = requestDTO.getImageUrl() != null ? requestDTO.getImageUrl() : currentUserToUpdate.getImageUrl();
+        Role role = requestDTO.getRole() != null ? requestDTO.getRole() : currentUserToUpdate.getRole();
+
+        User updatedUser = userService.updateUserWithRole(id, email, password, firstName, lastName, address, imageUrl, role);
         return ResponseEntity.ok(UserResponseDTO.fromUser(updatedUser));
     }
 

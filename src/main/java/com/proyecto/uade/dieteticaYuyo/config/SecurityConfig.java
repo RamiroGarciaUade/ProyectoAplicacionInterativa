@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/products/{id}",
                                 "/purchase-orders/{id}",
                                 "/purchase-orders/{id}/confirm",
-                                "/purchase-orders/{id}/cancel"
+                                "/purchase-orders/{id}/cancel",
+                                "/users/role/{id}"
                         ).hasAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE,
                                 "/categories/{id}",
