@@ -53,9 +53,44 @@ const Shop = () => {
     const sortType = queryParams.get("sort");
 
     let url = "http://localhost:8080/products";
-    
-    // si hay categorias seleccionadas, busca los productos para cada categoria
-    if (selectedCategories.length > 0) {
+
+    if (searchTerm && selectedCategories.length > 0) {
+      url = `http://localhost:8080/products/search/${encodeURIComponent(searchTerm)}`;
+      fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Error HTTP! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          let productsData = Array.isArray(data) ? data : [data];
+          const filtered = productsData.filter(product => selectedCategories.includes(product.categoryId));
+          if (sortType) {
+            filtered.sort((a, b) => {
+              switch (sortType) {
+                case "name_asc":
+                  return a.name.localeCompare(b.name);
+                case "name_desc":
+                  return b.name.localeCompare(a.name);
+                case "price_asc":
+                  return parseFloat(a.price) - parseFloat(b.price);
+                case "price_desc":
+                  return parseFloat(b.price) - parseFloat(a.price);
+                default:
+                  return 0;
+              }
+            });
+          }
+          setProducts(filtered);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error fetching products:", err);
+          setError("Error al cargar los productos. Intenta de nuevo más tarde.");
+          setIsLoading(false);
+        });
+    } else if (selectedCategories.length > 0) {
       Promise.all(
         selectedCategories.map(categoryId =>
           fetch(`http://localhost:8080/products/category/${categoryId}`)
@@ -68,7 +103,7 @@ const Shop = () => {
           const uniqueProducts = Array.from(
             new Map(allProducts.map(product => [product.id, product])).values()
           );
-          
+
           // si hay un tipo de ordenamiento, ordena los productos
           if (sortType) {
             uniqueProducts.sort((a, b) => {
@@ -97,7 +132,7 @@ const Shop = () => {
         });
     } else if (searchTerm) {
       // si no hay categorias seleccionadas pero hay un termino de busqueda
-      url = `http://localhost:8080/products/name/${encodeURIComponent(searchTerm)}`;
+      url = `http://localhost:8080/products/search/${encodeURIComponent(searchTerm)}`;
       fetch(url)
         .then((response) => {
           if (!response.ok) {
@@ -157,15 +192,12 @@ const Shop = () => {
   }, [location.search, selectedCategories]);
 
   return (
-    <div className="container mx-auto px-4 pt-4 pb-24">
-      <div className="flex items-center justify-center text-green-800 font-bold">
-        <h1>Nuestros Productos</h1>
-      </div>
-      
-      <div className="max-w-7xl mx-auto bg-white rounded-lg p-4 mb-6">
-        <div className="flex justify-end">
-          
-          <div className="w-48">
+    <div className="container mx-auto px-4 py-8 pb-24">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex-1"></div>
+        <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center flex-1">Nuestros Productos</h1>
+        <div className="w-48 flex-1 flex justify-end">
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
             <select
               onChange={(e) => handleSortChange(e.target.value)}
@@ -207,7 +239,7 @@ const Shop = () => {
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 ml-6">
             {isLoading ? (
               <div className="flex justify-center items-center min-h-[200px]">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
@@ -224,8 +256,8 @@ const Shop = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-600 min-h-[200px]">
-                <p>No se encontraron productos que coincidan con tu búsqueda o filtros.</p>
+              <div className="flex items-center justify-center min-h-[400px]">
+                <p className="text-gray-600">No se encontraron productos que coincidan con tu búsqueda o filtros.</p>
               </div>
             )}
           </div>

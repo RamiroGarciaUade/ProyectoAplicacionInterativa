@@ -11,6 +11,7 @@ const Home = () => {
   const [errorFeatured, setErrorFeatured] = useState(null);
   const [loadingVegan, setLoadingVegan] = useState(true); // Nuevo estado de carga para veganos
   const [errorVegan, setErrorVegan] = useState(null);     // Nuevo estado de error para veganos
+  const [randomCategories, setRandomCategories] = useState([]);
 
   useEffect(() => {
     // Carga de Productos Destacados
@@ -33,7 +34,6 @@ const Home = () => {
         );
         setVeganProducts(filteredVegan);
         setLoadingVegan(false);
-
       })
       .catch((err) => {
         console.error("Error al cargar productos:", err);
@@ -41,6 +41,27 @@ const Home = () => {
         setErrorVegan("No se pudieron cargar los productos veganos.");
         setLoadingFeatured(false);
         setLoadingVegan(false);
+      });
+  }, []);
+
+  // Cargar categorías y elegir 3 al azar
+  useEffect(() => {
+    fetch("http://localhost:8080/categories")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error HTTP! Estado: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Mezclar y tomar 3
+          const shuffled = [...data].sort(() => 0.5 - Math.random());
+          setRandomCategories(shuffled.slice(0, 3));
+        }
+      })
+      .catch((err) => {
+        console.error("Error al cargar categorías:", err);
       });
   }, []);
 
@@ -124,19 +145,12 @@ const Home = () => {
             Explora Nuestras Categorías
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link to="/shop?category=alimentos" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
-              <h3 className="text-xl font-bold text-green-700 mb-2">Alimentos Naturales</h3>
-              <p className="text-gray-600">Variedad de opciones orgánicas y saludables.</p>
-            </Link>
-            <Link to="/shop?category=suplementos" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
-              <h3 className="text-xl font-bold text-green-700 mb-2">Suplementos Naturales</h3>
-              <p className="text-gray-600">Vitaminas, minerales y más para tu bienestar.</p>
-            </Link>
-            <Link to="/shop?category=cosmetica" className="block bg-gray-100 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 text-center">
-              <h3 className="text-xl font-bold text-green-700 mb-2">Cosmética Natural</h3>
-              <p className="text-gray-600">Cuidado personal con ingredientes puros.</p>
-            </Link>
-            {/* Agrega más categorías según sea necesario */}
+            {randomCategories.map((cat) => (
+              <div key={cat.id} className="bg-gray-100 p-6 rounded-lg shadow-md text-center">
+                <h3 className="text-xl font-bold text-green-700 mb-2">{cat.name}</h3>
+                <p className="text-gray-600">{cat.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

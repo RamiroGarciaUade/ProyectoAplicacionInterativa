@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -7,6 +7,21 @@ const Cart = ({ onLoginClick }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      cartItems.forEach(async (item) => {
+        try {
+          const res = await fetch(`http://localhost:8080/products/${item.id}`);
+          if (!res.ok) {
+            removeFromCart(item.id);
+          }
+        } catch (e) {
+          removeFromCart(item.id);
+        }
+      });
+    }
+  }, [cartItems, removeFromCart]);
 
   const handleProceedToCheckout = () => {
     if (!isAuthenticated) {
@@ -53,10 +68,20 @@ const Cart = ({ onLoginClick }) => {
                 <div className="flex items-center space-x-4">
                   <img
                     src={
-                      item.imageUrls?.[0] || "https://via.placeholder.com/100"
+                      item.imageData && item.imageType
+                        ? `data:${item.imageType};base64,${item.imageData}`
+                        : (item.imageUrls?.[0] && item.imageUrls[0] !== ""
+                            ? item.imageUrls[0]
+                            : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen")
                     }
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded-lg"
+                    onError={e => {
+                      if (e.target.src !== "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen") {
+                        e.target.onerror = null;
+                        e.target.src = "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
+                      }
+                    }}
                   />
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>

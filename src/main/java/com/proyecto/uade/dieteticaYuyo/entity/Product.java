@@ -1,12 +1,22 @@
 package com.proyecto.uade.dieteticaYuyo.entity;
 
-import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.sql.Blob;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.*;
-
-import java.math.BigDecimal;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
@@ -36,13 +46,15 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
     private Long categoryId;
 
-    @ElementCollection
-    @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
-    @Column(name = "image_url")
-    private List<String> imageUrls;
+    @Lob
+    @Column(name = "image_data")
+    private Blob imageData;
 
-    @Column(name = "discount_percentage", precision = 5, scale = 2) // Nuevo campo para el porcentaje de descuento
+    @Column(name = "image_type")
+    private String imageType;
+
+    @Column(name = "discount_percentage", precision = 5, scale = 2)
     @PositiveOrZero(message = "El porcentaje de descuento no puede ser negativo")
-    private BigDecimal discountPercentage; // Por ejemplo, 10.00 para un 10%
+    private BigDecimal discountPercentage;
 }
 

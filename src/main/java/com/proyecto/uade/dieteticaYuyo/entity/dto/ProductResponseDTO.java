@@ -1,11 +1,12 @@
 package com.proyecto.uade.dieteticaYuyo.entity.dto;
 
+import java.math.BigDecimal;
+import java.util.Base64;
+
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @Builder
@@ -16,11 +17,20 @@ public class ProductResponseDTO {
     private BigDecimal price;
     private Integer stock;
     private Long categoryId;
-    private List<String> imageUrls;
+    private String imageData;
+    private String imageType;
     private BigDecimal discountPercentage;
-    
 
     public static ProductResponseDTO fromProduct(Product product) {
+        String base64Image = null;
+        if (product.getImageData() != null) {
+            try {
+                byte[] imageBytes = product.getImageData().getBytes(1, (int) product.getImageData().length());
+                base64Image = Base64.getEncoder().encodeToString(imageBytes);
+            } catch (Exception e) {
+            }
+        }
+
         return ProductResponseDTO.builder()
                 .id(product.getId())
                 .name(product.getName())
@@ -28,7 +38,8 @@ public class ProductResponseDTO {
                 .price(product.getPrice())
                 .stock(product.getStock())
                 .categoryId(product.getCategoryId())
-                .imageUrls(product.getImageUrls())
+                .imageData(base64Image)
+                .imageType(product.getImageType())
                 .discountPercentage(product.getDiscountPercentage())
                 .build();
     }
