@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import AdminLink from "../pages/AdminProduct";
+import AdminLink from "../components/AdminLink";
 import UserCart from "../components/UserCart"; // Nuevo componente
 import { jwtDecode } from "jwt-decode";
 
@@ -38,7 +38,7 @@ const NavBar = ({ onLoginClick }) => {
   );
 
   const handleLogout = () => {
-    navigate('/logout');
+    navigate("/logout");
   };
 
   const handleSearchChange = (e) => {
@@ -122,14 +122,27 @@ const NavBar = ({ onLoginClick }) => {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200"
                 >
-                  <span>¡Hola, <span className="text-green-600 font-bold">{user?.firstName}</span>!</span>
+                  <span>
+                    ¡Hola,{" "}
+                    <span className="text-green-600 font-bold">
+                      {user?.firstName}
+                    </span>
+                    !
+                  </span>
                   <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isUserMenuOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {isUserMenuOpen && (
