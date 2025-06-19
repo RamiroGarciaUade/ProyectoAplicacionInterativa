@@ -61,62 +61,41 @@ const AppContent = () => {
           <Route path="/success" element={<Success />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/orders" element={<Orders />} />
-          <Route
-            path="/admin/users"
-            element={
-              <AdminRoute>
-                <AdminUsers />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/users/:id"
-            element={
-              <AdminRoute>
-                <EditUser />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/products"
-            element={
-              <AdminRoute>
-                <AdminProducts />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/products/:id"
-            element={
-              <AdminRoute>
-                <EditProduct />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/categories"
-            element={
-              <AdminRoute>
-                <AdminCategories />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/categories/:id"
-            element={
-              <AdminRoute>
-                <EditCategory />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/orders"
-            element={
-              <AdminRoute>
-                <AdminOrders />
-              </AdminRoute>
-            }
-          />
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          } />
+          <Route path="/admin/users/:id" element={
+            <AdminRoute>
+              <EditUser />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products" element={
+            <AdminRoute>
+              <AdminProducts />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products/:id" element={
+            <AdminRoute>
+              <EditProduct />
+            </AdminRoute>
+          } />
+          <Route path="/admin/categories" element={
+            <AdminRoute>
+              <AdminCategories />
+            </AdminRoute>
+          } />
+          <Route path="/admin/categories/:id" element={
+            <AdminRoute>
+              <EditCategory />
+            </AdminRoute>
+          } />
+          <Route path="/admin/orders" element={
+            <AdminRoute>
+              <AdminOrders />
+            </AdminRoute>
+          } />
         </Routes>
       </main>
       {showLogin && (

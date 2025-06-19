@@ -34,7 +34,7 @@ public class AuthenticationController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponseDTO> authenticate(@RequestBody AuthenticationRequestDTO requestDTO) {
         User user = userService.getUserByEmail(requestDTO.getEmail());
-        authenticationService.authenticate(requestDTO.getEmail(), requestDTO.getPassword());
+        authenticationService.authenticate(requestDTO);
         return ResponseEntity.ok(authenticationService.getToken(user));
     }
 
