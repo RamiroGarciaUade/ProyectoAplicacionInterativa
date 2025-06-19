@@ -1,7 +1,8 @@
 package com.proyecto.uade.dieteticaYuyo.entity.dto;
 
 import java.math.BigDecimal;
-import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+
 import lombok.Data;
 
 @Data
@@ -11,6 +12,6 @@ public class ProductRequestDTO {
     private BigDecimal price;
     private Integer stock;
     private Long categoryId;
-    private MultipartFile image;
+    private List<String> imageUrls;
     private BigDecimal discountPercentage;
 }

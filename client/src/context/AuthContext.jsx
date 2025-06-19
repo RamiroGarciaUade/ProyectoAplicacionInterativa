@@ -24,18 +24,12 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
-  const updateUser = (updatedUserData) => {
-    setUser(updatedUserData);
-    localStorage.setItem('user', JSON.stringify(updatedUserData));
-  };
-
   const value = {
     user,
     token,
     loading,
     login,
     logout,
-    updateUser,
     isAuthenticated: !!token,
   };
 

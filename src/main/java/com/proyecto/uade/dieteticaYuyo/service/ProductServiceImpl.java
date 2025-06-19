@@ -1,22 +1,16 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.sql.Blob;
-import java.sql.SQLException;
 import java.util.List;
-import javax.sql.rowset.serial.SerialBlob;
 
 import com.proyecto.uade.dieteticaYuyo.exceptions.CategoryNotFoundException;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductNotFoundException;
 import com.proyecto.uade.dieteticaYuyo.repository.CategoryRepository;
-import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
 import com.proyecto.uade.dieteticaYuyo.exceptions.ProductDuplicateException;
@@ -29,9 +23,6 @@ public class ProductServiceImpl implements ProductService {
     
     @Autowired
     private CategoryRepository categoryRepository;
-
-    @Autowired
-    private EntityManager entityManager;
 
     @Override
     public Page<Product> getPagedProducts(PageRequest pageRequest) {
@@ -56,13 +47,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> searchProductsByName(String searchTerm) { 
-        return productRepository.findByNameContainingIgnoreCase(searchTerm);
-    }
-
-    @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, MultipartFile image, BigDecimal discountPercentage) throws ProductDuplicateException {
+    public Product createProduct(String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException {
         if (productRepository.existsByName(name)) {
             throw new ProductDuplicateException(name);
         }
@@ -70,30 +56,20 @@ public class ProductServiceImpl implements ProductService {
             throw new CategoryNotFoundException(categoryId);
         }
 
-        Product product = Product.builder()
+        return productRepository.save(Product.builder()
                 .name(name)
                 .description(description)
                 .price(price)
                 .stock(stock)
                 .categoryId(categoryId)
+                .imageUrls(imageUrls)
                 .discountPercentage(discountPercentage)
-                .build();
-
-        if (image != null && !image.isEmpty()) {
-            try {
-                product.setImageData(new SerialBlob(image.getBytes()));
-                product.setImageType(image.getContentType());
-            } catch (IOException | SQLException e) {
-                throw new RuntimeException("Error processing image", e);
-            }
-        }
-
-        return productRepository.save(product);
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, MultipartFile image, BigDecimal discountPercentage) throws ProductDuplicateException {
+    public Product updateProduct(Long id, String name, String description, BigDecimal price, Integer stock, Long categoryId, List<String> imageUrls, BigDecimal discountPercentage) throws ProductDuplicateException {
         Product product = getProductById(id);
         if (productRepository.existsByName(name) &&
                 !product.getName().equals(name)) {
@@ -108,16 +84,8 @@ public class ProductServiceImpl implements ProductService {
         product.setPrice(price);
         product.setStock(stock);
         product.setCategoryId(categoryId);
+        product.setImageUrls(imageUrls);
         product.setDiscountPercentage(discountPercentage);
-
-        if (image != null && !image.isEmpty()) {
-            try {
-                product.setImageData(new SerialBlob(image.getBytes()));
-                product.setImageType(image.getContentType());
-            } catch (IOException | SQLException e) {
-                throw new RuntimeException("Error processing image", e);
-            }
-        }
 
         return productRepository.save(product);
     }
@@ -134,32 +102,4 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByCategoryId(categoryId);
     }
 
-    @Override
-    @Transactional(rollbackFor = Throwable.class)
-    public Product uploadProductImage(Long productId, MultipartFile image) throws ProductNotFoundException {
-        Product product = getProductById(productId);
-        
-        try {
-            product.setImageData(new SerialBlob(image.getBytes()));
-            product.setImageType(image.getContentType());
-            return productRepository.save(product);
-        } catch (IOException | SQLException e) {
-            throw new RuntimeException("Error processing image", e);
-        }
-    }
-
-    @Override
-    public byte[] getProductImage(Long productId) throws ProductNotFoundException {
-        Product product = getProductById(productId);
-        
-        if (product.getImageData() == null) {
-            return null;
-        }
-
-        try {
-            return product.getImageData().getBytes(1, (int) product.getImageData().length());
-        } catch (SQLException e) {
-            throw new RuntimeException("Error retrieving image", e);
-        }
-    }
 }

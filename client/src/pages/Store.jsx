@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import ProductCard from "../components/ProductCard";
+import ProductEdits from "../components/ProductEdits";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const Shop = () => {
+const Store = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -11,7 +11,8 @@ const Shop = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => { // busca todas las categorias al montar el componente
+  useEffect(() => {
+    // busca todas las categorias al montar el componente
     fetch("http://localhost:8080/categories")
       .then((response) => {
         if (!response.ok) {
@@ -28,9 +29,9 @@ const Shop = () => {
   }, []);
 
   const handleCategoryChange = (categoryId) => {
-    setSelectedCategories(prev => {
+    setSelectedCategories((prev) => {
       if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
+        return prev.filter((id) => id !== categoryId);
       } else {
         return [...prev, categoryId];
       }
@@ -53,22 +54,25 @@ const Shop = () => {
     const sortType = queryParams.get("sort");
 
     let url = "http://localhost:8080/products";
-    
+
     // si hay categorias seleccionadas, busca los productos para cada categoria
     if (selectedCategories.length > 0) {
       Promise.all(
-        selectedCategories.map(categoryId =>
-          fetch(`http://localhost:8080/products/category/${categoryId}`)
-            .then(res => res.json())
+        selectedCategories.map((categoryId) =>
+          fetch(`http://localhost:8080/products/category/${categoryId}`).then(
+            (res) => res.json()
+          )
         )
       )
-        .then(results => {
+        .then((results) => {
           // elimina duplicados
           const allProducts = results.flat();
           const uniqueProducts = Array.from(
-            new Map(allProducts.map(product => [product.id, product])).values()
+            new Map(
+              allProducts.map((product) => [product.id, product])
+            ).values()
           );
-          
+
           // si hay un tipo de ordenamiento, ordena los productos
           if (sortType) {
             uniqueProducts.sort((a, b) => {
@@ -86,18 +90,22 @@ const Shop = () => {
               }
             });
           }
-          
+
           setProducts(uniqueProducts);
           setIsLoading(false);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Error fetching products:", err);
-          setError("Error al cargar los productos. Intenta de nuevo más tarde.");
+          setError(
+            "Error al cargar los productos. Intenta de nuevo más tarde."
+          );
           setIsLoading(false);
         });
     } else if (searchTerm) {
       // si no hay categorias seleccionadas pero hay un termino de busqueda
-      url = `http://localhost:8080/products/name/${encodeURIComponent(searchTerm)}`;
+      url = `http://localhost:8080/products/name/${encodeURIComponent(
+        searchTerm
+      )}`;
       fetch(url)
         .then((response) => {
           if (!response.ok) {
@@ -112,7 +120,9 @@ const Shop = () => {
         })
         .catch((err) => {
           console.error("Error fetching products:", err);
-          setError("Error al cargar los productos. Intenta de nuevo más tarde.");
+          setError(
+            "Error al cargar los productos. Intenta de nuevo más tarde."
+          );
           setIsLoading(false);
         });
     } else {
@@ -126,7 +136,7 @@ const Shop = () => {
         })
         .then((data) => {
           let productsData = Array.isArray(data) ? data : [data];
-          
+
           // si hay un tipo de ordenamiento, ordena los productos
           if (sortType) {
             productsData.sort((a, b) => {
@@ -144,13 +154,15 @@ const Shop = () => {
               }
             });
           }
-          
+
           setProducts(productsData);
           setIsLoading(false);
         })
         .catch((err) => {
           console.error("Error fetching products:", err);
-          setError("Error al cargar los productos. Intenta de nuevo más tarde.");
+          setError(
+            "Error al cargar los productos. Intenta de nuevo más tarde."
+          );
           setIsLoading(false);
         });
     }
@@ -161,12 +173,13 @@ const Shop = () => {
       <div className="flex items-center justify-center text-green-800 font-bold">
         <h1>Nuestros Productos</h1>
       </div>
-      
+
       <div className="max-w-7xl mx-auto bg-white rounded-lg p-4 mb-6">
         <div className="flex justify-end">
-          
           <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ordenar por
+            </label>
             <select
               onChange={(e) => handleSortChange(e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
@@ -185,7 +198,9 @@ const Shop = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex">
           <div className="w-56 bg-white p-4 rounded-lg shadow-md h-fit">
-            <h3 className="text-lg font-bold mb-4 text-green-800">Categorías</h3>
+            <h3 className="text-lg font-bold mb-4 text-green-800">
+              Categorías
+            </h3>
             <div className="space-y-2">
               {categories.map((category) => (
                 <div key={category.id} className="flex items-center">
@@ -220,12 +235,15 @@ const Shop = () => {
             ) : products.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-4 gap-x-1 justify-items-center">
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductEdits key={product.id} product={product} />
                 ))}
               </div>
             ) : (
               <div className="text-center text-gray-600 min-h-[200px]">
-                <p>No se encontraron productos que coincidan con tu búsqueda o filtros.</p>
+                <p>
+                  No se encontraron productos que coincidan con tu búsqueda o
+                  filtros.
+                </p>
               </div>
             )}
           </div>
@@ -235,4 +253,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default Store;

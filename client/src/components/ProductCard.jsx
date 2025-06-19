@@ -3,9 +3,9 @@ import { useCart } from "../context/CartContext"; // Asegúrate que la ruta sea 
 import { Link } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
-  const imageUrl = product.imageData
-    ? `data:${product.imageType};base64,${product.imageData}`
-    : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
+  const imageUrl =
+    product.imageUrls?.[0] ||
+    "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen"; // Placeholder actualizado
 
   const { addToCart } = useCart();
 
@@ -127,7 +127,7 @@ const ProductCard = ({ product }) => {
           disabled={product.stock === 0}
           className="bg-green-700 text-white font-bold rounded-full px-3 py-1.5 shadow-md transition-colors duration-200 hover:bg-green-600 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
         >
-          {product.stock === 0 ? "SIN STOCK" : "AGREGAR"}
+          {product.stock === 0 ? "SIN STOCK" : "COMPRAR"}
         </button>
         <Link
           to={`/products/${product.id}`}

@@ -1,7 +1,5 @@
 package com.proyecto.uade.dieteticaYuyo.service;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +12,6 @@ import com.proyecto.uade.dieteticaYuyo.entity.User;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserDuplicateException;
 import com.proyecto.uade.dieteticaYuyo.exceptions.UserNotFoundException;
 import com.proyecto.uade.dieteticaYuyo.repository.UserRepository;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.sql.rowset.serial.SerialBlob;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -45,84 +40,35 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public User createUser(String email, String password, String firstName, String lastName, String address, MultipartFile image) throws UserDuplicateException {
+    public User createUser(String email, String password, String firstName, String lastName, String address, String imageUrl) throws UserDuplicateException {
         if (userRepository.existsByEmail(email)) {
             throw new UserDuplicateException(email);
         }
-        User user = User.builder()
+        return userRepository.save(User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .firstName(firstName)
                 .lastName(lastName)
                 .address(address)
+                .imageUrl(imageUrl)
                 .role(Role.USER)
-                .build();
-
-        if (image != null && !image.isEmpty()) {
-            try {
-                user.setImageData(new SerialBlob(image.getBytes()));
-                user.setImageType(image.getContentType());
-            } catch (IOException | SQLException e) {
-                throw new RuntimeException("Error processing image", e);
-            }
-        }
-
-        return userRepository.save(user);
+                .build());
     }
 
     @Override
     @Transactional(rollbackFor = Throwable.class)
-    public User updateUser(Long id, String email, String password, String firstName, String lastName, String address, MultipartFile image) throws UserDuplicateException {
+    public User updateUser(Long id, String email, String password, String firstName, String lastName, String address, String imageUrl) throws UserDuplicateException {
         User user = getUserById(id);
         if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
             throw new UserDuplicateException(email);
         }
 
         user.setEmail(email);
-        if (!user.getPassword().equals(password)) {
-            user.setPassword(passwordEncoder.encode(password));
-        }
+        user.setPassword(passwordEncoder.encode(password));
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setAddress(address);
-
-        if (image != null && !image.isEmpty()) {
-            try {
-                user.setImageData(new SerialBlob(image.getBytes()));
-                user.setImageType(image.getContentType());
-            } catch (IOException | SQLException e) {
-                throw new RuntimeException("Error processing image", e);
-            }
-        }
-
-        return userRepository.save(user);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Throwable.class)
-    public User updateUserWithRole(Long id, String email, String password, String firstName, String lastName, String address, MultipartFile image, Role role) throws UserDuplicateException {
-        User user = getUserById(id);
-        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
-            throw new UserDuplicateException(email);
-        }
-
-        user.setEmail(email);
-        if (!user.getPassword().equals(password)) {
-            user.setPassword(passwordEncoder.encode(password));
-        }
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setAddress(address);
-        user.setRole(role);
-
-        if (image != null && !image.isEmpty()) {
-            try {
-                user.setImageData(new SerialBlob(image.getBytes()));
-                user.setImageType(image.getContentType());
-            } catch (IOException | SQLException e) {
-                throw new RuntimeException("Error processing image", e);
-            }
-        }
+        user.setImageUrl(imageUrl);
 
         return userRepository.save(user);
     }

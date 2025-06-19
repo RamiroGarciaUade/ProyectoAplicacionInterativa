@@ -11,10 +11,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.proyecto.uade.dieteticaYuyo.entity.Role;
-import com.proyecto.uade.dieteticaYuyo.entity.User;
-import com.proyecto.uade.dieteticaYuyo.service.UserService;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,11 +19,11 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-    private final UserService userService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -41,39 +37,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         jwt = authHeader.substring(7);
-        userEmail = jwtService.extractUsername(jwt);
+        userEmail = jwtService.extractUsername(jwt); // Extrae el nombre de usuario del token JWT
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt, userDetails)) { // Verifica si el token es válido (jwtService)
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
-                        userDetails.getAuthorities());
+                        userDetails.getAuthorities()); // roles
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                String requestURI = request.getRequestURI();
-                if (requestURI.startsWith("/purchase-orders/user/") && userDetails.getAuthorities().stream()
-                        .anyMatch(a -> a.getAuthority().equals(Role.USER.name()))) {
-                    String[] pathParts = requestURI.split("/");
-                    if (pathParts.length > 0) {
-                        try {
-                            Long requestedUserId = Long.parseLong(pathParts[pathParts.length - 1]);
-                            User currentUser = userService.getUserByEmail(userEmail);
-                            if (!currentUser.getId().equals(requestedUserId)) {
-                                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                                return;
-                            }
-                        } catch (NumberFormatException e) {
-                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                            return;
-                        }
-                    }
-                }
             }
         }
 
         filterChain.doFilter(request, response);
+
     }
 }

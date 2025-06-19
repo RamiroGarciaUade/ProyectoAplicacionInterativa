@@ -2,7 +2,6 @@ package com.proyecto.uade.dieteticaYuyo.entity;
 
 import java.util.Collection;
 import java.util.List;
-import java.sql.Blob;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,7 +21,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.Lob;
 
 @Data
 @Entity
@@ -52,10 +50,7 @@ public class User implements UserDetails {
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
 
-    @Lob
-    private Blob imageData;
-
-    private String imageType;
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

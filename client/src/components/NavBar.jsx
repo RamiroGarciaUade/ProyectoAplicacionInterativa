@@ -8,10 +8,9 @@ import { jwtDecode } from "jwt-decode";
 
 const NavBar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
   const { cartItems } = useCart();
-  const { isAuthenticated, logout, token, user } = useAuth();
+  const { isAuthenticated, logout, token } = useAuth();
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate(); // Inicializa useNavigate
 
@@ -19,12 +18,9 @@ const NavBar = ({ onLoginClick }) => {
     if (isAuthenticated && token) {
       try {
         const decoded = jwtDecode(token);
-        console.log("Token decodificado:", decoded);
-        const role = decoded?.role || decoded?.authorities?.[0]?.authority;
-        console.log("Rol encontrado:", role);
-        setUserRole(role);
+        setUserRole(decoded?.role || null);
       } catch (error) {
-        console.error("Error decodificando token:", error);
+        console.error("Error decoding token:", error);
         setUserRole(null);
       }
     } else {
@@ -79,13 +75,13 @@ const NavBar = ({ onLoginClick }) => {
               to="/shop"
               className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
             >
-              Tienda
+              Shop
             </Link>
             <Link
               to="/about"
               className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
             >
-              Sobre nosotros
+              About
             </Link>
             {/* Buscador en el Navbar */}
             <form onSubmit={handleSearchSubmit} className="flex items-center">
@@ -116,109 +112,25 @@ const NavBar = ({ onLoginClick }) => {
               </button>
             </form>
             <UserCart count={cartItemsCount} />
+            {/* Role-specific Links */}
+            {userRole === "ADMIN" && <AdminLink />}
+            {/* Auth Buttons */}
             {isAuthenticated ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200"
-                >
-                  <span>
-                    ¡Hola,{" "}
-                    <span className="text-green-600 font-bold">
-                      {user?.firstName}
-                    </span>
-                    !
-                  </span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${
-                      isUserMenuOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    {userRole === "ADMIN" && (
-                      <>
-                        <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                          Administrar
-                        </div>
-                        <Link
-                          to="/admin/users"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Usuarios
-                        </Link>
-                        <Link
-                          to="/admin/orders"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Órdenes
-                        </Link>
-                        <Link
-                          to="/admin/products"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Productos
-                        </Link>
-                        <Link
-                          to="/admin/categories"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                          onClick={() => setIsUserMenuOpen(false)}
-                        >
-                          Categorías
-                        </Link>
-                        <div className="border-t border-gray-100 my-1"></div>
-                      </>
-                    )}
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Mi cuenta
-                    </div>
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Datos personales
-                    </Link>
-                    <Link
-                      to="/orders"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      Órdenes
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setIsUserMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
               <button
-                onClick={onLoginClick}
+                onClick={handleLogout}
                 className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
               >
-                Iniciar sesión
+                Logout
               </button>
+            ) : (
+              <>
+                <button
+                  onClick={onLoginClick}
+                  className="text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+                >
+                  Login
+                </button>
+              </>
             )}
           </div>
 
@@ -286,6 +198,50 @@ const NavBar = ({ onLoginClick }) => {
           </div>
         </div>
       </div>
+      {/* Mobile Menu Content */}
+      {isMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-6 space-y-1 sm:px-3">
+            <Link
+              to="/"
+              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+            >
+              Home
+            </Link>
+            <Link
+              to="/shop"
+              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+            >
+              Shop
+            </Link>
+            <Link
+              to="/about"
+              className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+            >
+              About
+            </Link>
+
+            <UserCart count={cartItemsCount} isMobile />
+
+            {userRole === "ADMIN" && <AdminLink isMobile />}
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={onLoginClick}
+                className="block px-3 py-2 text-green-600 hover:text-green-700 font-medium tracking-wide transition-colors duration-200"
+              >
+                Login
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
