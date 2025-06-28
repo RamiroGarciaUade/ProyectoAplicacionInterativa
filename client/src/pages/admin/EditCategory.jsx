@@ -1,40 +1,47 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAppSelector } from "../../hooks/useAppSelector";
+import { useAppDispatch } from "../../hooks/useAppDispatch";
+import {
+  fetchAllCategories,
+  createCategory,
+  updateCategory,
+  selectAdminCategories,
+  selectAdminLoading,
+  selectAdminError,
+  clearError
+} from "../../redux/slices/adminSlice";
 
 const EditCategory = () => {
   const { id } = useParams();
-  const { token } = useAuth();
   const isNew = id === "new";
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const categories = useAppSelector(selectAdminCategories);
+  const loading = useAppSelector(selectAdminLoading);
+  const error = useAppSelector(selectAdminError);
+
   const [category, setCategory] = useState({
     name: "",
     description: ""
   });
   const [originalCategory, setOriginalCategory] = useState(null);
-  const [loading, setLoading] = useState(!isNew);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isNew) {
-      const fetchCategory = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/categories/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Error al cargar categoría");
-          const data = await res.json();
-          setCategory(data);
-          setOriginalCategory(data);
-        } catch (e) {
-          setError(e.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchCategory();
+    dispatch(clearError());
+    dispatch(fetchAllCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isNew && categories.length > 0) {
+      const found = categories.find(c => String(c.id) === String(id));
+      if (found) {
+        setCategory(found);
+        setOriginalCategory(found);
+      }
     }
-  }, [id, token, isNew]);
+  }, [categories, id, isNew]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,27 +62,11 @@ const EditCategory = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let res;
       if (isNew) {
-        res = await fetch(`http://localhost:8080/categories`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(category),
-        });
+        await dispatch(createCategory(category)).unwrap();
       } else {
-        res = await fetch(`http://localhost:8080/categories/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(category),
-        });
+        await dispatch(updateCategory({ categoryId: id, categoryData: category })).unwrap();
       }
-      if (!res.ok) throw new Error(isNew ? "Error al crear categoría" : "Error al actualizar categoría");
       navigate("/admin/categories");
     } catch (e) {
       alert(e.message);
@@ -84,6 +75,15 @@ const EditCategory = () => {
 
   if (loading) return <div>Cargando categoría...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
+  if (!isNew && categories.length > 0 && !categories.find(c => String(c.id) === String(id))) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+          Categoría con ID: {id} no encontrada.
+        </div>
+      </div>
+    );
+  }
   if (!category) return null;
 
   return (

@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { loginUser, clearError } from "../redux/slices/authSlice";
 
 const Login = ({ onClose, onSwitch }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      onClose();
+    }
+  }, [isAuthenticated, onClose]);
 
   const handleClose = () => {
     if (location.pathname === "/checkout") {
@@ -25,6 +37,9 @@ const Login = ({ onClose, onSwitch }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
@@ -44,18 +59,8 @@ const Login = ({ onClose, onSwitch }) => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    setLoading(true);
     setErrors({});
-
-    try {
-      const data = await authService.login(formData.email, formData.password);
-      login(data.access_token, data.user);
-      onClose();
-    } catch (err) {
-      setErrors({ general: "Email o contraseña incorrectos." });
-    } finally {
-      setLoading(false);
-    }
+    dispatch(loginUser({ email: formData.email, password: formData.password }));
   };
 
   return (
@@ -73,14 +78,13 @@ const Login = ({ onClose, onSwitch }) => {
           Login
         </h2>
 
-        {errors.general && (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center text-sm">
-            {errors.general}
+            {error}
           </div>
         )}
 
         <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* Inputs... */}
           <input
             name="email"
             type="text"
@@ -108,13 +112,13 @@ const Login = ({ onClose, onSwitch }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-green-500 hover:bg-green-700 text-white font-bold rounded"
+            className="w-full h-12 bg-green-500 hover:bg-green-700 text-white font-bold rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Ingresando..." : "Entrar"}
           </button>
 
           <div className="flex flex-col items-center mt-2">
-            <p className=" text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-600">
               ¿No tenés una cuenta?{" "}
             </p>
             <button

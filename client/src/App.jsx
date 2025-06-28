@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useAppSelector } from "./hooks/useAppSelector";
+import { selectNotification, selectCartItemsCount } from "./redux/slices/cartSlice";
+import { useAppDispatch } from "./hooks/useAppDispatch";
+import { closeNotification } from "./redux/slices/cartSlice";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -14,10 +18,8 @@ import Success from "./pages/Success";
 import Logout from "./pages/Logout";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
-import { AuthProvider } from "./context/AuthContext";
-import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import AddedToCartNotification from "./components/AddedToCartNotification"; // Importa el componente
+import ProtectedRoute from "./components/ProtectedRoute";
+import AddedToCartNotification from "./components/AddedToCartNotification";
 import AdminRoute from "./routes/AdminRoute";
 import AdminUsers from "./pages/admin/AdminUsers";
 import EditUser from "./pages/admin/EditUser";
@@ -27,12 +29,17 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import EditCategory from "./pages/admin/EditCategory";
 import AdminOrders from "./pages/admin/AdminOrders";
 
-// Un componente wrapper para acceder al contexto del carrito
 const AppContent = () => {
-  const { notification, closeNotification, cartItemsCount } = useCart(); // Obtén el estado de la notificación
+  const notification = useAppSelector(selectNotification);
+  const cartItemsCount = useAppSelector(selectCartItemsCount);
+  const dispatch = useAppDispatch();
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const location = useLocation();
+
+  const handleCloseNotification = () => {
+    dispatch(closeNotification());
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -123,8 +130,8 @@ const AppContent = () => {
           productImage={notification.productImage}
           productPrice={notification.productPrice}
           quantityAdded={notification.quantityAdded}
-          cartItemCount={cartItemsCount} // Pasar el conteo total actual
-          onClose={closeNotification}
+          cartItemCount={cartItemsCount}
+          onClose={handleCloseNotification}
         />
       )}
     </div>
@@ -132,15 +139,7 @@ const AppContent = () => {
 };
 
 function App() {
-  return (
-    <AuthProvider>
-      <CartProvider>
-        {" "}
-        {/* CartProvider envuelve AppContent */}
-        <AppContent />
-      </CartProvider>
-    </AuthProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;

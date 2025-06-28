@@ -1,43 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { 
+  addToCartWithValidation, 
+  selectCartItems,
+  selectValidationLoading
+} from "../redux/slices/cartSlice";
+import { 
+  fetchProductById, 
+  fetchCategories,
+  selectCurrentProduct,
+  selectCategories,
+  selectProductsLoading,
+  selectProductsError
+} from "../redux/slices/productSlice";
 import AddedToCartNotification from "../components/AddedToCartNotification";
-// import ProductCarousel from "../components/ProductCarousel"; // Descomenta si implementas productos relacionados
 
 const ProductDetail = () => {
   const { productId } = useParams();
-  const [product, setProduct] = useState(null);
+  const dispatch = useAppDispatch();
+  
   const [quantity, setQuantity] = useState(1);
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationProduct, setNotificationProduct] = useState(null);
-  const [categories, setCategories] = useState([]);
-  // const [relatedProducts, setRelatedProducts] = useState([]);
+  const [error, setError] = useState(null);
 
-  const { addToCart, cartItems } = useCart();
+  const product = useAppSelector(selectCurrentProduct);
+  const categories = useAppSelector(selectCategories);
+  const cartItems = useAppSelector(selectCartItems);
+  const isLoading = useAppSelector(selectProductsLoading);
+  const productsError = useAppSelector(selectProductsError);
+  const validationLoading = useAppSelector(selectValidationLoading);
 
   useEffect(() => {
-    fetch("http://localhost:8080/categories")
-      .then((response) => response.json())
-      .then((data) => {
-        setCategories(data);
-      })
-      .catch((error) => {
-        console.error("Error fetching categories:", error);
-      });
-  }, []);
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   useEffect(() => {
     if (productId) {
-      fetch(`http://localhost:8080/products/${productId}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setProduct(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching product data:", error);
-        });
+      dispatch(fetchProductById(productId));
     }
-  }, [productId]);
+  }, [productId, dispatch]);
 
   const handleQuantityChange = (delta) => {
     setQuantity((prev) => {
@@ -58,30 +60,45 @@ const ProductDetail = () => {
     return numericPrice;
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || product.stock === 0 || quantity > product.stock) {
-      console.warn("No se puede agregar al carrito: sin stock o cantidad excede stock.");
+      setError("No se puede agregar al carrito: sin stock o cantidad excede stock.");
       return;
     }
-
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+    setError(null);
+    try {
+      await dispatch(addToCartWithValidation({ product, quantity })).unwrap();
+    } catch (error) {
+      setError(error);
+      setTimeout(() => setError(null), 3000);
     }
-
-    setNotificationProduct({
-      name: product.name,
-      image: product.imageData ? `data:${product.imageType};base64,${product.imageData}` : null,
-      price: calculateDiscountedPrice(product.price, product.discountPercentage),
-      quantity: quantity,
-    });
-    setShowNotification(true);
   };
 
-  if (!product) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
         <p className="ml-4 text-green-700">Cargando producto...</p>
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+          {productsError}
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+          Producto con ID: {productId} no encontrado.
+        </div>
       </div>
     );
   }
@@ -159,8 +176,6 @@ const ProductDetail = () => {
 
             <div className="lg:w-1/2 flex flex-col">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-1">{product.name}</h1>
-              {/* Aquí puedes añadir info como marca o categoría si está disponible en 'product' */}
-              {/* <p className="text-sm text-gray-500 mb-3">Categoría: {product.categoryName || 'General'}</p> */}
 
               <div className="mb-4 mt-2">
                 {discountPercentage > 0 ? (
@@ -179,80 +194,82 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              {/* Ejemplo de promociones (ajusta según los datos de tu producto) */}
-              {/* {product.promotionalText && (
-                <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 p-3 rounded-md mb-4 text-sm">
-                  <p><strong>{product.promotionalText}</strong></p>
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                  {error}
                 </div>
-              )}*/}
+              )}
 
-              <div className="mb-5">
-                <h3 className="text-md font-semibold text-gray-700 mb-1">Descripción:</h3>
-                <p className="text-gray-600 text-sm leading-relaxed prose prose-sm max-w-none">
-                  {product.description || "No hay descripción disponible para este producto."}
-                </p>
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed">{product.description}</p>
               </div>
 
-              <div className="mb-5">
-                <p className={`text-sm font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {product.stock > 0 ? `Disponibles: ${product.stock} unidades` : 'Producto sin stock'}
-                </p>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Stock disponible:</span>
+                  <span className={`text-sm font-semibold ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {product.stock} unidades
+                  </span>
+                </div>
+                
+                {product.stock > 0 && (
+                  <div className="flex items-center space-x-4 mb-4">
+                    <label className="text-sm font-medium text-gray-700">Cantidad:</label>
+                    <div className="flex items-center border border-gray-300 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        -
+                      </button>
+                      <span className="px-4 py-1 text-center min-w-[3rem]">{quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= product.stock}
+                        className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center border border-gray-300 rounded-md shadow-sm">
-                  <button
-                    className="px-3 py-2 text-lg text-gray-700 hover:bg-gray-100 rounded-l-md transition disabled:opacity-50"
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1 || product.stock === 0}
-                    aria-label="Disminuir cantidad"
-                  >
-                    -
-                  </button>
-                  <span className="px-4 py-2 text-md font-medium text-gray-800 w-12 text-center tabular-nums">{quantity}</span>
-                  <button
-                    className="px-3 py-2 text-lg text-gray-700 hover:bg-gray-100 rounded-r-md transition disabled:opacity-50"
-                    onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= product.stock || product.stock === 0}
-                    aria-label="Aumentar cantidad"
-                  >
-                    +
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.stock === 0 || quantity > product.stock}
-                  className={`flex-grow bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-5 rounded-md transition-all duration-150 text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50`}
+                  disabled={product.stock === 0 || validationLoading}
+                  className={`flex-1 bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ${
+                    validationLoading ? 'opacity-75' : ''
+                  }`}
                 >
-                  {product.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
+                  {validationLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Validando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl font-bold">+</span>
+                      <span>{product.stock === 0 ? 'Sin stock' : 'Agregar al carrito'}</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              <div className="border-t border-gray-200 pt-5 mt-auto text-sm text-gray-600">
-                <p><span className="font-medium text-gray-700">Categoría:</span> {getCategoryName(product.categoryId)}</p>
-                {/* <p><span className="font-medium text-gray-700">SKU:</span> {product.sku || 'N/D'}</p> */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>Productos en carrito:</span>
+                  <span className="font-semibold">{currentCartItemCount}</span>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Sección "También te puede interesar" - Descomenta y adapta si la implementas */}
-          {/* {relatedProducts && relatedProducts.length > 0 && (
-            <div className="mt-16">
-              <h2 className="text-2xl font-bold text-gray-800 text-center mb-8">También te puede interesar</h2>
-              <ProductCarousel products={relatedProducts} />
-            </div>
-          )} */}
         </main>
       </div>
-      {showNotification && notificationProduct && (
-        <AddedToCartNotification
-          productName={notificationProduct.name}
-          productImage={notificationProduct.image}
-          productPrice={notificationProduct.price}
-          cartItemCount={currentCartItemCount + notificationProduct.quantity}
-          onClose={() => setShowNotification(false)}
-        />
-      )}
     </>
   );
 };

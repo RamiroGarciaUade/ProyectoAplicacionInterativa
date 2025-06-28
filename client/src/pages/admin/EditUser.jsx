@@ -1,43 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAppSelector } from "../../hooks/useAppSelector";
+import { useAppDispatch } from "../../hooks/useAppDispatch";
+import {
+  fetchAllUsers,
+  updateUser,
+  createUser,
+  selectAdminUsers,
+  selectAdminLoading,
+  selectAdminError,
+  clearError
+} from "../../redux/slices/adminSlice";
 
 const EditUser = () => {
   const { id } = useParams();
-  const { token, user: currentUser, updateUser } = useAuth();
   const isNew = id === "new";
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const users = useAppSelector(selectAdminUsers);
+  const loading = useAppSelector(selectAdminLoading);
+  const error = useAppSelector(selectAdminError);
+
   const [user, setUser] = useState({
+    id: "",
     firstName: "",
     lastName: "",
     email: "",
+    address: "",
     role: "USER"
   });
   const [originalUser, setOriginalUser] = useState(null);
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(!isNew);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
+    dispatch(clearError());
     if (!isNew) {
-      const fetchUser = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Error al cargar usuario");
-          const data = await res.json();
-          setUser(data);
-          setOriginalUser(data);
-        } catch (e) {
-          setError(e.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchUser();
+      dispatch(fetchAllUsers());
     }
-  }, [id, token, isNew]);
+  }, [dispatch, isNew]);
+
+  useEffect(() => {
+    if (!isNew && users.length > 0) {
+      const found = users.find(u => String(u.id) === String(id));
+      if (found) {
+        setUser({
+          id: found.id || "",
+          firstName: found.firstName || "",
+          lastName: found.lastName || "",
+          email: found.email || "",
+          address: found.address || "",
+          role: found.role || "USER"
+        });
+        setOriginalUser(found);
+      }
+    } else if (isNew) {
+      setUser({
+        id: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        address: "",
+        role: "USER"
+      });
+      setOriginalUser(null);
+    }
+  }, [users, id, isNew]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,47 +99,17 @@ const EditUser = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let res;
-      let updatedUserData = { ...user };
-      const allowedFields = ["email", "password", "firstName", "lastName", "address", "role"];
-      Object.keys(updatedUserData).forEach(key => {
-        if (!allowedFields.includes(key) || updatedUserData[key] === undefined) {
-          delete updatedUserData[key];
-        }
-      });
-      if (!updatedUserData.password) delete updatedUserData.password;
       if (isNew) {
-        const data = new FormData();
-        data.append("firstName", user.firstName);
-        data.append("lastName", user.lastName);
-        data.append("email", user.email);
-        data.append("address", user.address);
-        data.append("password", password);
-        data.append("role", user.role);
-        if (user.image && typeof user.image !== "string") {
-          data.append("image", user.image);
-        }
-        res = await fetch(`http://localhost:8080/users`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: data,
-        });
+        const formData = new FormData();
+        formData.append('email', user.email);
+        formData.append('password', password);
+        formData.append('firstName', user.firstName);
+        formData.append('lastName', user.lastName);
+        formData.append('address', user.address);
+        
+        await dispatch(createUser(formData)).unwrap();
       } else {
-        res = await fetch(`http://localhost:8080/users/role/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatedUserData),
-        });
-      }
-      if (!res.ok) throw new Error(isNew ? "Error al crear usuario" : "Error al actualizar usuario");
-      if (!isNew && currentUser && String(currentUser.id) === String(id)) {
-        const updated = await res.json().catch(() => user);
-        updateUser(updated);
+        await dispatch(updateUser({ userId: id, userData: user })).unwrap();
       }
       navigate("/admin/users");
     } catch (e) {
@@ -121,6 +119,16 @@ const EditUser = () => {
 
   if (loading) return <div>Cargando usuario...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
+  if (!isNew && users.length > 0 && !users.find(u => String(u.id) === String(id))) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+          Usuario con ID: {id} no encontrado.
+        </div>
+      </div>
+    );
+  }
+  if (!isNew && (!user || !user.id)) return <div>Cargando datos del usuario...</div>;
   if (!user) return null;
 
   return (
@@ -130,29 +138,29 @@ const EditUser = () => {
         {!isNew && (
           <div>
             <label className="block text-gray-700">ID</label>
-            <input value={user.id} disabled className="w-full bg-gray-100 text-gray-500 rounded px-3 py-2" />
+            <input value={user.id ?? ""} disabled className="w-full bg-gray-100 text-gray-500 rounded px-3 py-2" />
           </div>
         )}
         <div>
           <label className="block text-gray-700">Nombre</label>
-          <input name="firstName" value={user.firstName || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          <input name="firstName" value={user.firstName ?? ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
         </div>
         <div>
           <label className="block text-gray-700">Apellido</label>
-          <input name="lastName" value={user.lastName || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          <input name="lastName" value={user.lastName ?? ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
         </div>
         <div>
           <label className="block text-gray-700">Email</label>
-          <input name="email" value={user.email || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          <input name="email" value={user.email ?? ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
         </div>
         <div>
           <label className="block text-gray-700">Dirección</label>
-          <input name="address" value={user.address || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+          <input name="address" value={user.address ?? ""} onChange={handleChange} className="w-full border rounded px-3 py-2" />
         </div>
         {!isNew && (
           <div>
             <label className="block text-gray-700">Rol</label>
-            <select name="role" value={user.role} onChange={handleRoleChange} className="w-full border rounded px-3 py-2">
+            <select name="role" value={user.role ?? "USER"} onChange={handleRoleChange} className="w-full border rounded px-3 py-2">
               <option value="USER">USER</option>
               <option value="ADMIN">ADMIN</option>
             </select>

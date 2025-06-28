@@ -1,48 +1,38 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../../hooks/useAppSelector";
+import { useAppDispatch } from "../../hooks/useAppDispatch";
+import { 
+  fetchProducts, 
+  fetchCategories,
+  selectProducts,
+  selectCategories,
+  selectProductsLoading,
+  selectProductsError
+} from "../../redux/slices/productSlice";
+import {
+  deleteProduct,
+  selectAdminLoading,
+  selectAdminError,
+  clearError
+} from "../../redux/slices/adminSlice";
 
 const AdminProducts = () => {
-  const { token } = useAuth();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8080/products", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar productos");
-      const data = await res.json();
-      setProducts(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("http://localhost:8080/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar categorías");
-      const data = await res.json();
-      setCategories(data);
-    } catch (e) {
-      setError(e.message);
-    }
-  };
+  const dispatch = useAppDispatch();
+  
+  const products = useAppSelector(selectProducts);
+  const categories = useAppSelector(selectCategories);
+  const loading = useAppSelector(selectProductsLoading);
+  const error = useAppSelector(selectProductsError);
+  const adminLoading = useAppSelector(selectAdminLoading);
+  const adminError = useAppSelector(selectAdminError);
 
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, []);
+    dispatch(clearError());
+    dispatch(fetchProducts());
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
   const getCategoryName = (categoryId) => {
     const cat = categories.find(c => c.id === categoryId);
@@ -51,25 +41,41 @@ const AdminProducts = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que querés borrar este producto?")) return;
+    
     try {
-      const res = await fetch(`http://localhost:8080/products/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al borrar producto");
-      setProducts(products.filter(p => p.id !== id));
-    } catch (e) {
-      alert(e.message);
+      await dispatch(deleteProduct(id)).unwrap();
+      // Recargar productos después de eliminar
+      dispatch(fetchProducts());
+    } catch (error) {
+      alert(error || "Error al borrar producto");
     }
   };
 
-  if (loading) return <div>Cargando productos...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (loading || adminLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-green-700">Cargando productos...</p>
+      </div>
+    );
+  }
+  
+  if (error || adminError) {
+    return (
+      <div className="max-w-6xl mx-auto py-10">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error || adminError}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-green-800 font-['Merriweather']">Panel de Productos</h1>
+        <h1 className="text-2xl font-bold text-green-800 font-['Merriweather']">
+          Panel de Productos
+        </h1>
         <button
           className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 font-medium"
           onClick={() => navigate("/admin/products/new")}
@@ -77,6 +83,12 @@ const AdminProducts = () => {
           Crear producto
         </button>
       </div>
+      
+      {products.length === 0 ? (
+        <div className="text-center text-gray-600 py-8">
+          No hay productos para mostrar
+        </div>
+      ) : (
       <table className="w-full border rounded-lg bg-white">
         <thead>
           <tr className="bg-green-100">
@@ -110,6 +122,7 @@ const AdminProducts = () => {
                   className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition-colors"
                   onClick={() => handleDelete(product.id)}
                   title="Borrar"
+                  disabled={adminLoading}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
@@ -120,6 +133,7 @@ const AdminProducts = () => {
           ))}
         </tbody>
       </table>
+      )}
     </div>
   );
 };

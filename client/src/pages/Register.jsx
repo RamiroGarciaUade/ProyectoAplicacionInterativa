@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
+import { useState, useEffect } from "react";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { registerUser, clearError } from "../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
 
 const Register = ({ onClose, onSwitch }) => {
@@ -13,9 +14,21 @@ const Register = ({ onClose, onSwitch }) => {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      onClose();
+      navigate("/");
+    }
+  }, [isAuthenticated, onClose, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,9 +36,11 @@ const Register = ({ onClose, onSwitch }) => {
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
-  //
   const validatePassword = (password) => {
     return password.length >= 8;
   };
@@ -54,37 +69,14 @@ const Register = ({ onClose, onSwitch }) => {
     }
     return newErrors;
   };
-  //
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
-    setLoading(true);
 
     if (Object.keys(validationErrors).length === 0) {
-      try {
-        const data = await authService.register(formData);
-
-        if (!data || !data.access_token) {
-          throw new Error("No se recibió token de acceso");
-        }
-
-        login(data.access_token, data.user);
-        onClose();
-        navigate("/");
-      } catch (err) {
-        console.error("Error en el registro:", err);
-        setErrors({ 
-          general: err.message === "Registration failed" 
-            ? "Error al registrar. Por favor, intente nuevamente." 
-            : err.message 
-        });
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
+      dispatch(registerUser(formData));
     }
   };
 
@@ -110,9 +102,9 @@ const Register = ({ onClose, onSwitch }) => {
           Registro
         </h2>
 
-        {errors.general && (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center text-sm">
-            {errors.general}
+            {error}
           </div>
         )}
 
@@ -176,13 +168,13 @@ const Register = ({ onClose, onSwitch }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="w-full h-12 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Creando cuenta..." : "Registrarse"}
           </button>
 
           <div className="flex flex-col items-center mt-2">
-            <p className=" text-center text-sm text-gray-600">
+            <p className="text-center text-sm text-gray-600">
               ¿Ya tenes una cuenta?{" "}
             </p>
             <button

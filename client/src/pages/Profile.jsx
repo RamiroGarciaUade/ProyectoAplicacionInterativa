@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { updateUserProfile, selectAuthLoading, selectAuthError, clearError } from '../redux/slices/authSlice';
 import { jwtDecode } from 'jwt-decode';
 
 const Profile = () => {
-  const { user, token, updateUser } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const isLoading = useAppSelector(selectAuthLoading);
+  const error = useAppSelector(selectAuthError);
+  
   const [formData, setFormData] = useState({
     email: '',
     address: '',
@@ -15,69 +22,50 @@ const Profile = () => {
     role: ''
   });
   const [originalData, setOriginalData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [localError, setLocalError] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setIsAdmin(decoded.role === 'ADMIN');
-      } catch (error) {
-        console.error('Error decodificando token:', error);
-      }
-    }
-  }, [token]);
+    dispatch(clearError());
+  }, [dispatch]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    if (user) {
       try {
-        const response = await fetch(`http://localhost:8080/users/${user.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al cargar los datos del usuario');
-        }
-
-        const userData = await response.json();
-        setFormData({
-          email: userData.email || '',
-          address: userData.address || '',
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          imageUrl: userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '',
-          role: userData.role || ''
-        });
-        setImagePreview(userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '');
-        setOriginalData({
-          email: userData.email || '',
-          address: userData.address || '',
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          imageUrl: userData.imageData && userData.imageType ? `data:${userData.imageType};base64,${userData.imageData}` : '',
-          role: userData.role || ''
-        });
-        setIsLoading(false);
-      } catch (err) {
-        setError('Error al cargar los datos del usuario');
-        setIsLoading(false);
+        setIsAdmin(user.role === 'ADMIN');
+      } catch (error) {
+        console.error('Error verificando rol:', error);
       }
-    };
+    }
+  }, [user]);
 
-    if (user && token) {
-      fetchUserData();
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      setFormData({
+        email: user.email || '',
+        address: user.address || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        imageUrl: user.imageData && user.imageType ? `data:${user.imageType};base64,${user.imageData}` : '',
+        role: user.role || ''
+      });
+      setImagePreview(user.imageData && user.imageType ? `data:${user.imageType};base64,${user.imageData}` : '');
+      setOriginalData({
+        email: user.email || '',
+        address: user.address || '',
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        imageUrl: user.imageData && user.imageType ? `data:${user.imageType};base64,${user.imageData}` : '',
+        role: user.role || ''
+      });
     } else {
       navigate('/');
     }
-  }, [user, token, navigate]);
+  }, [user, isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,7 +93,7 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
+    setLocalError('');
     setSuccess(false);
 
     try {
@@ -117,38 +105,27 @@ const Profile = () => {
       if (formData.role) data.append('role', formData.role);
       if (imageFile) data.append('image', imageFile);
 
-      const response = await fetch(`http://localhost:8080/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: data
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al actualizar los datos');
-      }
-
-      const updatedUser = await response.json();
-      updateUser(updatedUser);
+      const result = await dispatch(updateUserProfile({ userId: user.id, userData: data })).unwrap();
+      
       setOriginalData({
-        email: updatedUser.email || '',
-        address: updatedUser.address || '',
-        firstName: updatedUser.firstName || '',
-        lastName: updatedUser.lastName || '',
-        imageUrl: updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : '',
-        role: updatedUser.role || ''
+        email: result.email || '',
+        address: result.address || '',
+        firstName: result.firstName || '',
+        lastName: result.lastName || '',
+        imageUrl: result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : '',
+        role: result.role || ''
       });
       setImageFile(null);
-      setImagePreview(updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : '');
+      setImagePreview(result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : '');
       setFormData(prev => ({
         ...prev,
-        imageUrl: updatedUser.imageData && updatedUser.imageType ? `data:${updatedUser.imageType};base64,${updatedUser.imageData}` : ''
+        imageUrl: result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : ''
       }));
       setSuccess(true);
       setDirty(false);
     } catch (err) {
-      setError('Error al actualizar los datos');
+      console.error('Error al actualizar perfil:', err);
+      setLocalError(err || 'Error al actualizar el perfil');
     }
   };
 
@@ -163,11 +140,19 @@ const Profile = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-['Merriweather'] font-bold text-green-800 mb-6 text-center">Mis Datos Personales</h1>
+        <h1 className="text-2xl font-['Merriweather'] font-bold text-green-800 mb-6 text-center">
+          Mis Datos Personales
+        </h1>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
+          </div>
+        )}
+        
+        {localError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {localError}
           </div>
         )}
         
@@ -220,7 +205,7 @@ const Profile = () => {
                 </label>
                 <input
                   type="text"
-                  value={user.id}
+                  value={user?.id || ''}
                   disabled
                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500"
                 />
@@ -299,14 +284,14 @@ const Profile = () => {
           <div className="flex justify-center mt-8">
             <button
               type="submit"
-              disabled={!hasChanges()}
+              disabled={!hasChanges() || isLoading}
               className={`px-6 py-2 rounded-md text-white font-medium transition-colors duration-200 ${
-                hasChanges()
+                hasChanges() && !isLoading
                   ? 'bg-green-600 hover:bg-green-700'
                   : 'bg-gray-400 cursor-not-allowed'
               }`}
             >
-              Actualizar datos
+              {isLoading ? 'Actualizando...' : 'Actualizar datos'}
             </button>
           </div>
         </form>

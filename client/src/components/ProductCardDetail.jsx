@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { useCart } from "../context/CartContext";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { addToCartWithValidation, selectValidationLoading } from "../redux/slices/cartSlice";
 
 const ShoppingCartIcon = ({ className }) => (
   <svg
@@ -20,7 +22,9 @@ const ShoppingCartIcon = ({ className }) => (
 
 const ProductCardDetail = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+  const [error, setError] = useState(null);
+  const dispatch = useAppDispatch();
+  const validationLoading = useAppSelector(selectValidationLoading);
 
   const handleQuantityChange = (amount) => {
     const newQuantity = quantity + amount;
@@ -29,9 +33,15 @@ const ProductCardDetail = ({ product }) => {
     }
   };
 
-  const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
+  const handleAddToCart = async () => {
+    if (product.stock === 0) return;
+    
+    setError(null);
+    try {
+      await dispatch(addToCartWithValidation({ product, quantity })).unwrap();
+    } catch (error) {
+      setError(error);
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -57,6 +67,12 @@ const ProductCardDetail = ({ product }) => {
           <div className="flex justify-between items-start mb-5">
             <h1 className="text-3xl md:text-4xl font-bold">{product.name}</h1>
           </div>
+
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
 
           {product.weightInGrams && (
             <p className="text-sm mb-3">
@@ -103,7 +119,7 @@ const ProductCardDetail = ({ product }) => {
             <input
               type="number"
               value={quantity}
-              readOnly // o usa onChange para input directo, con validacion
+              readOnly
               className="w-12 text-center border-t border-b border-gray-300 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
             <button
@@ -117,13 +133,22 @@ const ProductCardDetail = ({ product }) => {
 
           <button
             onClick={handleAddToCart}
-            disabled={product.stock === 0}
+            disabled={product.stock === 0 || validationLoading}
             className={`w-full bg-green-800 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center text-lg shadow-md hover:shadow-lg transition-all duration-300 ease-in-out ${
-              product.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              product.stock === 0 || validationLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            <ShoppingCartIcon className="w-6 h-6 mr-2" />
-            {product.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
+            {validationLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                <span>Validando...</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCartIcon className="w-6 h-6 mr-2" />
+                {product.stock === 0 ? 'SIN STOCK' : 'AGREGAR AL CARRITO'}
+              </>
+            )}
           </button>
         </div>
       </div>

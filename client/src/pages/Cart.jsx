@@ -1,27 +1,45 @@
-import React, { useEffect } from "react";
-import { useCart } from "../context/CartContext";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { 
+  selectCartItems, 
+  selectCartTotal,
+  selectValidationLoading,
+  selectRemovedProducts,
+  removeFromCart, 
+  updateQuantity,
+  validateCartItems,
+  clearRemovedProducts
+} from "../redux/slices/cartSlice";
 
 const Cart = ({ onLoginClick }) => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
-  const { isAuthenticated } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  
+  const cartItems = useAppSelector(selectCartItems);
+  const totalAmount = useAppSelector(selectCartTotal);
+  const validationLoading = useAppSelector(selectValidationLoading);
+  const removedProducts = useAppSelector(selectRemovedProducts);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const [showRemovedNotification, setShowRemovedNotification] = useState(false);
 
   useEffect(() => {
     if (cartItems.length > 0) {
-      cartItems.forEach(async (item) => {
-        try {
-          const res = await fetch(`http://localhost:8080/products/${item.id}`);
-          if (!res.ok) {
-            removeFromCart(item.id);
-          }
-        } catch (e) {
-          removeFromCart(item.id);
-        }
-      });
+      dispatch(validateCartItems());
     }
-  }, [cartItems, removeFromCart]);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (removedProducts.length > 0) {
+      setShowRemovedNotification(true);
+      setTimeout(() => {
+        dispatch(clearRemovedProducts());
+        setShowRemovedNotification(false);
+      }, 5000);
+    }
+  }, [removedProducts, dispatch]);
 
   const handleProceedToCheckout = () => {
     if (!isAuthenticated) {
@@ -30,6 +48,30 @@ const Cart = ({ onLoginClick }) => {
       navigate("/checkout");
     }
   };
+
+  const handleUpdateQuantity = (productId, newQuantity, stock) => {
+    dispatch(updateQuantity({ productId, newQuantity, stock }));
+  };
+
+  const handleRemoveFromCart = (productId) => {
+    dispatch(removeFromCart(productId));
+  };
+
+  if (validationLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 my-24">
+        <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
+          Tu Carrito
+        </h1>
+        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-800"></div>
+            <p className="text-gray-600">Validando productos del carrito...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -50,16 +92,34 @@ const Cart = ({ onLoginClick }) => {
     );
   }
 
-  const totalAmount = cartItems.reduce(
-    (total, item) => total + item.effectivePrice * item.quantity,
-    0
-  );
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-20">
       <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
         Tu Carrito
       </h1>
+      
+      {showRemovedNotification && (
+        <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Productos removidos del carrito
+              </h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p>
+                  Algunos productos han sido removidos automáticamente porque ya no están disponibles o han sido eliminados.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="divide-y divide-green-200">
           {cartItems.map((item) => (
@@ -86,7 +146,6 @@ const Cart = ({ onLoginClick }) => {
                   <div>
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
                     <p className="text-green-800 font-medium">
-                      {/* Mostrar precio efectivo por unidad */}
                       {new Intl.NumberFormat("es-AR", {
                         style: "currency",
                         currency: "ARS",
@@ -113,9 +172,9 @@ const Cart = ({ onLoginClick }) => {
                   <div className="flex items-center border rounded-lg">
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity - 1, item.stock)
+                        handleUpdateQuantity(item.id, item.quantity - 1, item.stock)
                       }
-                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg"
+                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={item.quantity <= 1}
                     >
                       -
@@ -123,16 +182,16 @@ const Cart = ({ onLoginClick }) => {
                     <span className="px-3 py-1">{item.quantity}</span>
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1, item.stock)
+                        handleUpdateQuantity(item.id, item.quantity + 1, item.stock)
                       }
-                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg"
+                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={item.quantity >= item.stock}
                     >
                       +
                     </button>
                   </div>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => handleRemoveFromCart(item.id)}
                     className="text-red-600 hover:text-red-800"
                     aria-label={`Quitar ${item.name} del carrito`}
                   >
@@ -158,7 +217,6 @@ const Cart = ({ onLoginClick }) => {
           <div className="flex justify-between items-center mb-4">
             <span className="text-lg font-medium">Total:</span>
             <span className="text-2xl font-bold text-green-800">
-              {/* Usar totalAmount calculado con effectivePrice */}
               {new Intl.NumberFormat("es-AR", {
                 style: "currency",
                 currency: "ARS",

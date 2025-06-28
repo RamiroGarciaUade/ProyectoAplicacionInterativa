@@ -1,27 +1,28 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { selectCartItems } from "../redux/slices/cartSlice";
+import { logoutUser } from "../redux/slices/authSlice";
 import AdminLink from "../pages/AdminProduct";
-import UserCart from "../components/UserCart"; // Nuevo componente
+import UserCart from "../components/UserCart";
 import { jwtDecode } from "jwt-decode";
 
 const NavBar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
-  const { cartItems } = useCart();
-  const { isAuthenticated, logout, token, user } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useAppDispatch();
+  const cartItems = useAppSelector(selectCartItems);
+  const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
   const [userRole, setUserRole] = useState(null);
-  const navigate = useNavigate(); // Inicializa useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthenticated && token) {
       try {
         const decoded = jwtDecode(token);
-        console.log("Token decodificado:", decoded);
         const role = decoded?.role || decoded?.authorities?.[0]?.authority;
-        console.log("Rol encontrado:", role);
         setUserRole(role);
       } catch (error) {
         console.error("Error decodificando token:", error);
@@ -37,8 +38,14 @@ const NavBar = ({ onLoginClick }) => {
     0
   );
 
-  const handleLogout = () => {
-    navigate('/logout');
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      navigate('/logout');
+    } catch (error) {
+      console.error('Error durante el logout:', error);
+      navigate('/logout');
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -46,12 +53,11 @@ const NavBar = ({ onLoginClick }) => {
   };
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault(); // Previene el comportamiento por defecto del formulario (recargar página)
+    e.preventDefault();
     if (searchTerm.trim()) {
-      // Si el término de búsqueda no está vacío
-      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`); // Redirige a /shop con el término de búsqueda
-      setSearchTerm(""); // Limpia el campo de búsqueda
-      setIsMenuOpen(false); // Cierra el menú móvil si está abierto
+      navigate(`/shop?search=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm("");
+      setIsMenuOpen(false);
     }
   };
 
@@ -87,7 +93,6 @@ const NavBar = ({ onLoginClick }) => {
             >
               Sobre nosotros
             </Link>
-            {/* Buscador en el Navbar */}
             <form onSubmit={handleSearchSubmit} className="flex items-center">
               <input
                 type="text"
@@ -211,7 +216,6 @@ const NavBar = ({ onLoginClick }) => {
 
           {/* Buscador para menú móvil */}
           <div className="md:hidden flex items-center">
-            {/* Mobile Search */}
             <form
               onSubmit={handleSearchSubmit}
               className="flex items-center mr-4"
@@ -242,7 +246,6 @@ const NavBar = ({ onLoginClick }) => {
                 </svg>
               </button>
             </form>
-            {/* Botón de alternancia */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-green-600 hover:text-green-700 focus:outline-none transition-colors duration-200"

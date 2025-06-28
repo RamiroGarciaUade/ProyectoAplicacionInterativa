@@ -1,13 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { 
+  fetchUserOrders, 
+  selectUserOrders, 
+  selectOrdersLoading, 
+  selectOrdersError 
+} from '../redux/slices/orderSlice';
 
 const Orders = () => {
-  const { token, user } = useAuth();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const orders = useAppSelector(selectUserOrders);
+  const isLoading = useAppSelector(selectOrdersLoading);
+  const error = useAppSelector(selectOrdersError);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -36,34 +45,12 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/purchase-orders/user/${user.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al cargar las órdenes');
-        }
-
-        const data = await response.json();
-        setOrders(data);
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Error al cargar las órdenes');
-        setIsLoading(false);
-      }
-    };
-
-    if (token && user) {
-      fetchOrders();
+    if (isAuthenticated && user) {
+      dispatch(fetchUserOrders());
     } else {
       navigate('/');
     }
-  }, [token, user, navigate]);
+  }, [dispatch, isAuthenticated, user, navigate]);
 
   if (isLoading) {
     return (
@@ -85,7 +72,9 @@ const Orders = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8 text-center">Mis Órdenes</h1>
+      <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8 text-center">
+        Mis Órdenes
+      </h1>
       
       {orders.length === 0 ? (
         <div className="text-center text-gray-600">

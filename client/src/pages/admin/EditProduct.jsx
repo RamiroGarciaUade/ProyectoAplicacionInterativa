@@ -1,11 +1,39 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useAppSelector } from "../../hooks/useAppSelector";
+import { useAppDispatch } from "../../hooks/useAppDispatch";
+import {
+  fetchAllCategories,
+  createProduct,
+  updateProduct,
+  selectAdminCategories,
+  selectAdminLoading,
+  selectAdminError,
+  clearError
+} from "../../redux/slices/adminSlice";
+import {
+  fetchProductById,
+  selectCurrentProduct,
+  selectProductsLoading,
+  selectProductsError
+} from "../../redux/slices/productSlice";
 
 const EditProduct = () => {
   const { id } = useParams();
-  const { token } = useAuth();
   const isNew = id === "new";
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const categories = useAppSelector(selectAdminCategories);
+  const adminLoading = useAppSelector(selectAdminLoading);
+  const adminError = useAppSelector(selectAdminError);
+  const productsLoading = useAppSelector(selectProductsLoading);
+  const productsError = useAppSelector(selectProductsError);
+  const currentProduct = useAppSelector(selectCurrentProduct);
+
+  const loading = adminLoading || productsLoading;
+  const error = adminError || productsError;
+
   const [product, setProduct] = useState({
     name: "",
     description: "",
@@ -15,46 +43,32 @@ const EditProduct = () => {
     discountPercentage: 0
   });
   const [originalProduct, setOriginalProduct] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(!isNew);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
   const [imageFile, setImageFile] = useState(null);
   const [imageFileName, setImageFileName] = useState("");
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch("http://localhost:8080/categories", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Error al cargar categorías");
-        const data = await res.json();
-        setCategories(data);
-      } catch (e) {
-        setError(e.message);
-      }
-    };
-    fetchCategories();
+    dispatch(clearError());
+    dispatch(fetchAllCategories());
+    
     if (!isNew) {
-      const fetchProduct = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/products/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Error al cargar producto");
-          const data = await res.json();
-          setProduct(data);
-          setOriginalProduct(data);
-        } catch (e) {
-          setError(e.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchProduct();
+      dispatch(fetchProductById(id));
     }
-  }, [id, token, isNew]);
+  }, [dispatch, id, isNew]);
+
+  useEffect(() => {
+    if (!isNew && currentProduct) {
+      setProduct({
+        id: currentProduct.id || "",
+        name: currentProduct.name || "",
+        description: currentProduct.description || "",
+        price: currentProduct.price || "",
+        stock: currentProduct.stock || "",
+        categoryId: currentProduct.categoryId ? String(currentProduct.categoryId) : "",
+        discountPercentage: currentProduct.discountPercentage || 0
+      });
+      setOriginalProduct(currentProduct);
+    }
+  }, [currentProduct, isNew]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,7 +84,6 @@ const EditProduct = () => {
     if (isNaN(value)) value = 0;
     if (value < 0) value = 0;
     if (value > 100) value = 100;
-    // Solo múltiplos de 5
     value = Math.round(value / 5) * 5;
     setProduct({ ...product, discountPercentage: value });
   };
@@ -99,6 +112,11 @@ const EditProduct = () => {
       );
     }
     if (!originalProduct) return false;
+    
+    if (!product.categoryId || product.categoryId === "") {
+      return false;
+    }
+    
     return (
       product.name !== originalProduct.name ||
       product.description !== originalProduct.description ||
@@ -113,7 +131,6 @@ const EditProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let res;
       const formData = new FormData();
       formData.append("name", product.name);
       formData.append("description", product.description);
@@ -121,27 +138,16 @@ const EditProduct = () => {
       formData.append("stock", product.stock);
       formData.append("categoryId", product.categoryId);
       formData.append("discountPercentage", product.discountPercentage);
+      
       if (imageFile) {
         formData.append("image", imageFile);
       }
+      
       if (isNew) {
-        res = await fetch(`http://localhost:8080/products`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+        await dispatch(createProduct(formData)).unwrap();
       } else {
-        res = await fetch(`http://localhost:8080/products/${id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+        await dispatch(updateProduct({ productId: id, productData: formData })).unwrap();
       }
-      if (!res.ok) throw new Error(isNew ? "Error al crear producto" : "Error al actualizar producto");
       navigate("/admin/products");
     } catch (e) {
       alert(e.message);
@@ -149,7 +155,26 @@ const EditProduct = () => {
   };
 
   if (loading) return <div>Cargando producto...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+
+  if (error) {
+    return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+            {productsError}
+          </div>
+        </div>
+      );
+  }
+
+  if (!isNew && !loading && !currentProduct && id !== "new") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+          Producto con ID: {id} no encontrado.
+        </div>
+      </div>
+    );
+  }
   if (!product) return null;
 
   return (
@@ -180,10 +205,10 @@ const EditProduct = () => {
         </div>
         <div>
           <label className="block text-gray-700">Categoría</label>
-          <select name="categoryId" value={product.categoryId} onChange={handleCategoryChange} className="w-full border rounded px-3 py-2">
+          <select name="categoryId" value={product.categoryId || ""} onChange={handleCategoryChange} className="w-full border rounded px-3 py-2">
             <option value="">Seleccionar categoría</option>
             {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
             ))}
           </select>
         </div>
@@ -203,6 +228,15 @@ const EditProduct = () => {
         </div>
         <div>
           <label className="block text-gray-700">Imagen</label>
+          {!isNew && currentProduct?.imageData && (
+            <div className="mb-2">
+              <img
+                src={`data:${currentProduct.imageType};base64,${currentProduct.imageData}`}
+                alt="Imagen actual del producto"
+                className="w-32 h-32 object-cover rounded border"
+              />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <span className="flex-1 px-3 py-2 border rounded bg-gray-50 text-gray-700">
               {imageFileName || "Ningún archivo seleccionado"}
@@ -217,6 +251,11 @@ const EditProduct = () => {
               />
             </label>
           </div>
+          {!isNew && (
+            <p className="text-xs text-gray-500 mt-1">
+              Dejar vacío para mantener la imagen actual
+            </p>
+          )}
         </div>
         <div className="flex gap-4 mt-6">
           <button

@@ -1,21 +1,30 @@
-import React from "react";
-import { useCart } from "../context/CartContext"; // Asegúrate que la ruta sea correcta
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAppDispatch } from "../hooks/useAppDispatch";
+import { addToCartWithValidation, selectValidationLoading } from "../redux/slices/cartSlice";
+import { useAppSelector } from "../hooks/useAppSelector";
 
 const ProductCard = ({ product }) => {
+  const dispatch = useAppDispatch();
+  const validationLoading = useAppSelector(selectValidationLoading);
+  const [error, setError] = useState(null);
+  
   const imageUrl = product.imageData
     ? `data:${product.imageType};base64,${product.imageData}`
     : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
 
-  const { addToCart } = useCart();
-
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation(); // Evita que el click en el botón también active el Link del card
     e.preventDefault(); // Evita la navegación si el botón está dentro de un Link
+    
     if (product.stock > 0) {
-      addToCart(product);
-      // Opcional: Aquí podrías disparar una notificación global
-      // console.log(`${product.name} agregado al carrito.`);
+      setError(null);
+      try {
+        await dispatch(addToCartWithValidation({ product, quantity: 1 })).unwrap();
+      } catch (error) {
+        setError(error);
+        setTimeout(() => setError(null), 3000);
+      }
     }
   };
 
@@ -42,23 +51,26 @@ const ProductCard = ({ product }) => {
 
   return (
     <div className="group relative border border-gray-200 rounded-lg p-3 bg-white hover:shadow-xl transition-all duration-300 flex flex-col justify-between w-full max-w-[190px] min-h-[320px] overflow-hidden">
-      {/* Link que envuelve la mayor parte de la tarjeta, excepto los botones que aparecerán al hacer hover */}
+      {error && (
+        <div className="absolute top-0 left-0 right-0 bg-red-100 border border-red-400 text-red-700 px-2 py-1 text-xs z-30">
+          {error}
+        </div>
+      )}
+      
       <Link
         to={`/products/${product.id}`}
         className="block flex flex-col h-full mb-6"
       >
         {" "}
-        {/* Añadido mb-12 para dejar espacio a los botones */}
         <div className="flex-grow">
           {" "}
-          {/* Contenedor para imagen y texto */}
           <div className="h-40 w-full rounded-md mb-2 flex items-center justify-center relative bg-gray-50 overflow-hidden">
             <img
               src={imageUrl}
               alt={product.name}
               className="object-contain w-full h-full transition-transform duration-300 group-hover:scale-105"
               onError={(e) => {
-                e.target.onerror = null; // Previene loop si el placeholder también falla
+                e.target.onerror = null;
                 e.target.src =
                   "https://placehold.co/300x300/EBF5FB/17202A?text=Error";
               }}
@@ -114,8 +126,6 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
 
-      {/* Contenedor de botones con estilo del código 1, posicionado absolutamente en la parte inferior */}
-      {/* Se muestra al hacer hover en la tarjeta (group-hover) */}
       <div
         className="absolute bottom-0 left-0 right-0 p-3 bg-white 
                    opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto 
@@ -124,10 +134,21 @@ const ProductCard = ({ product }) => {
       >
         <button
           onClick={handleAddToCart}
-          disabled={product.stock === 0}
-          className="bg-green-700 text-white font-bold rounded-full px-3 py-1.5 shadow-md transition-colors duration-200 hover:bg-green-600 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+          disabled={product.stock === 0 || validationLoading}
+          className={`font-bold rounded-full px-3 py-1.5 shadow-md transition-colors duration-200 text-[10px] focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 ${
+            product.stock === 0 || validationLoading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-green-700 text-white hover:bg-green-600"
+          }`}
         >
-          {product.stock === 0 ? "SIN STOCK" : "AGREGAR"}
+          {validationLoading ? (
+            <div className="flex items-center space-x-1">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+              <span>...</span>
+            </div>
+          ) : (
+            product.stock === 0 ? "SIN STOCK" : "AGREGAR"
+          )}
         </button>
         <Link
           to={`/products/${product.id}`}
