@@ -1,103 +1,146 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { selectIsAuthenticated } from "../../redux/userSlice";
+import { 
+  selectAdminUsers, 
+  selectAdminLoading, 
+  selectAdminError,
+  fetchAllUsers,
+  deleteUser 
+} from "../../redux/adminSlice";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const AdminUsers = () => {
-  const { token } = useAuth();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const users = useSelector(selectAdminUsers);
+  const loading = useSelector(selectAdminLoading);
+  const error = useSelector(selectAdminError);
+  const dispatch = useDispatch();
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8080/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar usuarios");
-      const data = await res.json();
-      setUsers(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchAllUsers());
+    }
+  }, [isAuthenticated, dispatch]);
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
+      try {
+        await dispatch(deleteUser(userId)).unwrap();
+      } catch (err) {
+        alert("Error al eliminar usuario");
+      }
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  if (loading.users) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que querés borrar este usuario?")) return;
-    try {
-      const res = await fetch(`http://localhost:8080/users/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al borrar usuario");
-      setUsers(users.filter(u => u.id !== id));
-    } catch (e) {
-      alert(e.message);
-    }
-  };
-
-  if (loading) return <div>Cargando usuarios...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (error.users) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error.users}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-green-800 font-['Merriweather']">Panel de Usuarios</h1>
-        <button
-          className="bg-green-800 text-white px-4 py-2 rounded hover:bg-green-700 font-medium"
-          onClick={() => navigate("/admin/users/new")}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800">
+          Gestión de Usuarios
+        </h1>
+        <Link
+          to="/admin/users/new"
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
         >
-          Crear usuario
-        </button>
+          Agregar Usuario
+        </Link>
       </div>
-      <table className="w-full border rounded-lg bg-white">
-        <thead>
-          <tr className="bg-green-100">
-            <th className="py-2 px-4 text-left font-semibold">ID</th>
-            <th className="py-2 px-4 text-left font-semibold">Nombre</th>
-            <th className="py-2 px-4 text-left font-semibold">Apellido</th>
-            <th className="py-2 px-4 text-left font-semibold">Email</th>
-            <th className="py-2 px-4 text-left font-semibold">Rol</th>
-            <th className="py-2 px-4 text-left font-semibold">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(user => (
-            <tr key={user.id} className="border-t">
-              <td className="py-2 px-4 text-left">{user.id}</td>
-              <td className="py-2 px-4 text-left">{user.firstName}</td>
-              <td className="py-2 px-4 text-left">{user.lastName}</td>
-              <td className="py-2 px-4 text-left">{user.email}</td>
-              <td className="py-2 px-4 text-left">{user.role === "ADMIN" ? "Administrador" : "Usuario"}</td>
-              <td className="py-2 px-4 flex gap-2">
-                <button
-                  className="bg-green-700 hover:bg-green-800 text-white p-2 rounded transition-colors"
-                  onClick={() => navigate(`/admin/users/${user.id}`)}
-                  title="Editar"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13zm-6 6h6" />
-                  </svg>
-                </button>
-                <button
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition-colors"
-                  onClick={() => handleDelete(user.id)}
-                  title="Borrar"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
-                  </svg>
-                </button>
-              </td>
+
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Usuario
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Rol
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Dirección
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10">
+                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <span className="text-green-800 font-medium">
+                          {user.firstName?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {user.firstName} {user.lastName}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{user.email}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    user.role === "ADMIN" 
+                      ? "bg-red-100 text-red-800" 
+                      : "bg-green-100 text-green-800"
+                  }`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {user.address || "No especificada"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex space-x-2">
+                    <Link
+                      to={`/admin/users/${user.id}`}
+                      className="text-green-600 hover:text-green-900"
+                    >
+                      Editar
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

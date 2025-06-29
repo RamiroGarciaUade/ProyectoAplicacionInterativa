@@ -1,11 +1,14 @@
 import React, { useEffect } from "react";
-import { useCart } from "../context/CartContext";
+import { useSelector, useDispatch } from "react-redux";
+import { selectCartItems, selectCartTotal, removeFromCart, updateQuantity } from "../redux/cartSlice";
+import { selectIsAuthenticated } from "../redux/userSlice";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 const Cart = ({ onLoginClick }) => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
-  const { isAuthenticated } = useAuth();
+  const cartItems = useSelector(selectCartItems);
+  const totalAmount = useSelector(selectCartTotal);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,14 +17,14 @@ const Cart = ({ onLoginClick }) => {
         try {
           const res = await fetch(`http://localhost:8080/products/${item.id}`);
           if (!res.ok) {
-            removeFromCart(item.id);
+            dispatch(removeFromCart(item.id));
           }
         } catch (e) {
-          removeFromCart(item.id);
+          dispatch(removeFromCart(item.id));
         }
       });
     }
-  }, [cartItems, removeFromCart]);
+  }, [cartItems, dispatch]);
 
   const handleProceedToCheckout = () => {
     if (!isAuthenticated) {
@@ -49,11 +52,6 @@ const Cart = ({ onLoginClick }) => {
       </div>
     );
   }
-
-  const totalAmount = cartItems.reduce(
-    (total, item) => total + item.effectivePrice * item.quantity,
-    0
-  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pb-20">
@@ -113,7 +111,7 @@ const Cart = ({ onLoginClick }) => {
                   <div className="flex items-center border rounded-lg">
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity - 1, item.stock)
+                        dispatch(updateQuantity({ productId: item.id, newQuantity: item.quantity - 1, stock: item.stock }))
                       }
                       className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg"
                       disabled={item.quantity <= 1}
@@ -123,7 +121,7 @@ const Cart = ({ onLoginClick }) => {
                     <span className="px-3 py-1">{item.quantity}</span>
                     <button
                       onClick={() =>
-                        updateQuantity(item.id, item.quantity + 1, item.stock)
+                        dispatch(updateQuantity({ productId: item.id, newQuantity: item.quantity + 1, stock: item.stock }))
                       }
                       className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg"
                       disabled={item.quantity >= item.stock}
@@ -132,7 +130,7 @@ const Cart = ({ onLoginClick }) => {
                     </button>
                   </div>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => dispatch(removeFromCart(item.id))}
                     className="text-red-600 hover:text-red-800"
                     aria-label={`Quitar ${item.name} del carrito`}
                   >

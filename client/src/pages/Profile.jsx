@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { selectUser, selectIsAuthenticated, updateUser } from '../redux/userSlice';
 
 const Profile = () => {
-  const { user, token, updateUser } = useAuth();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -24,6 +27,7 @@ const Profile = () => {
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
@@ -32,11 +36,12 @@ const Profile = () => {
         console.error('Error decodificando token:', error);
       }
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`http://localhost:8080/users/${user.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -72,12 +77,12 @@ const Profile = () => {
       }
     };
 
-    if (user && token) {
+    if (user && isAuthenticated) {
       fetchUserData();
     } else {
       navigate('/');
     }
-  }, [user, token, navigate]);
+  }, [user, isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,6 +122,7 @@ const Profile = () => {
       if (formData.role) data.append('role', formData.role);
       if (imageFile) data.append('image', imageFile);
 
+      const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:8080/users/${user.id}`, {
         method: 'PUT',
         headers: {
@@ -130,7 +136,7 @@ const Profile = () => {
       }
 
       const updatedUser = await response.json();
-      updateUser(updatedUser);
+      dispatch(updateUser(updatedUser));
       setOriginalData({
         email: updatedUser.email || '',
         address: updatedUser.address || '',

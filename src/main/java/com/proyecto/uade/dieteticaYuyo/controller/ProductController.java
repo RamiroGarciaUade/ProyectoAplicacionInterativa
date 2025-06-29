@@ -1,6 +1,5 @@
 package com.proyecto.uade.dieteticaYuyo.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -18,12 +17,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Category;
 import com.proyecto.uade.dieteticaYuyo.entity.Product;
+import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductImageDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductRequestDTO;
 import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductResponseDTO;
-import com.proyecto.uade.dieteticaYuyo.entity.dto.ProductImageDTO;
+import com.proyecto.uade.dieteticaYuyo.service.CategoryService;
 import com.proyecto.uade.dieteticaYuyo.service.ProductService;
 
 @RestController
@@ -31,13 +31,23 @@ import com.proyecto.uade.dieteticaYuyo.service.ProductService;
 public class ProductController {
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private CategoryService categoryService;
 
     // GET /products
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         List<Product> products = productService.getAllProducts();
         List<ProductResponseDTO> productDTOs = products.stream()
-                .map(ProductResponseDTO::fromProduct)
+                .map(product -> {
+                    try {
+                        Category category = categoryService.getCategoryById(product.getCategoryId());
+                        return ProductResponseDTO.fromProduct(product, category);
+                    } catch (Exception e) {
+                        return ProductResponseDTO.fromProduct(product, null);
+                    }
+                })
                 .toList();
 
         return ResponseEntity.ok(productDTOs);
@@ -50,7 +60,14 @@ public class ProductController {
             @RequestParam(required = false, defaultValue = "10") Integer size) {
 
         Page<Product> productPage = productService.getPagedProducts(PageRequest.of(page, size));
-        Page<ProductResponseDTO> productDTOPage = productPage.map(ProductResponseDTO::fromProduct);
+        Page<ProductResponseDTO> productDTOPage = productPage.map(product -> {
+            try {
+                Category category = categoryService.getCategoryById(product.getCategoryId());
+                return ProductResponseDTO.fromProduct(product, category);
+            } catch (Exception e) {
+                return ProductResponseDTO.fromProduct(product, null);
+            }
+        });
 
         return ResponseEntity.ok(productDTOPage);
     }
@@ -59,14 +76,24 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable Long id) {
         Product product = productService.getProductById(id);
-        return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
+        try {
+            Category category = categoryService.getCategoryById(product.getCategoryId());
+            return ResponseEntity.ok(ProductResponseDTO.fromProduct(product, category));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ProductResponseDTO.fromProduct(product, null));
+        }
     }
 
     // GET /products/name/{name}
     @GetMapping("/name/{name}")
     public ResponseEntity<ProductResponseDTO> getProductByName(@PathVariable String name) {
         Product product = productService.getProductByName(name);
-        return ResponseEntity.ok(ProductResponseDTO.fromProduct(product));
+        try {
+            Category category = categoryService.getCategoryById(product.getCategoryId());
+            return ResponseEntity.ok(ProductResponseDTO.fromProduct(product, category));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ProductResponseDTO.fromProduct(product, null));
+        }
     }
     
     // GET /products/search/{searchTerm}
@@ -74,7 +101,14 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> searchProductsByName(@PathVariable String searchTerm) {
         List<Product> products = productService.searchProductsByName(searchTerm);
         List<ProductResponseDTO> productDTOs = products.stream()
-                .map(ProductResponseDTO::fromProduct)
+                .map(product -> {
+                    try {
+                        Category category = categoryService.getCategoryById(product.getCategoryId());
+                        return ProductResponseDTO.fromProduct(product, category);
+                    } catch (Exception e) {
+                        return ProductResponseDTO.fromProduct(product, null);
+                    }
+                })
                 .toList();
         return ResponseEntity.ok(productDTOs);
     }
@@ -84,7 +118,14 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable Long categoryId) {
         List<Product> products = productService.getProductsByCategory(categoryId);
         List<ProductResponseDTO> productDTOs = products.stream()
-                .map(ProductResponseDTO::fromProduct)
+                .map(product -> {
+                    try {
+                        Category category = categoryService.getCategoryById(product.getCategoryId());
+                        return ProductResponseDTO.fromProduct(product, category);
+                    } catch (Exception e) {
+                        return ProductResponseDTO.fromProduct(product, null);
+                    }
+                })
                 .toList();
 
         return ResponseEntity.ok(productDTOs);

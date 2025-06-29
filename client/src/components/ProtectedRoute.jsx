@@ -1,7 +1,9 @@
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated, selectUserLoading } from '../redux/userSlice';
 
 export const ProtectedRoute = ({ children, onLoginClick }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const loading = useSelector(selectUserLoading);
 
   if (loading) {
     return (

@@ -1,193 +1,237 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated } from "../../redux/userSlice";
 
 const EditUser = () => {
   const { id } = useParams();
-  const { token, user: currentUser, updateUser } = useAuth();
-  const isNew = id === "new";
-  const [user, setUser] = useState({
+  const navigate = useNavigate();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isEditing = id !== "new";
+
+  const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    role: "USER"
+    password: "",
+    address: "",
+    role: "USER",
   });
-  const [originalUser, setOriginalUser] = useState(null);
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(!isNew);
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isNew) {
-      const fetchUser = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Error al cargar usuario");
-          const data = await res.json();
-          setUser(data);
-          setOriginalUser(data);
-        } catch (e) {
-          setError(e.message);
-        } finally {
-          setLoading(false);
-        }
-      };
+    if (isEditing && id) {
       fetchUser();
     }
-  }, [id, token, isNew]);
+  }, [id, isEditing]);
+
+  const fetchUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8080/users/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al cargar usuario");
+      }
+
+      const user = await response.json();
+      setFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        password: "",
+        address: user.address || "",
+        role: user.role || "USER",
+      });
+    } catch (err) {
+      setError("Error al cargar usuario");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
-  };
-
-  const handleRoleChange = (e) => {
-    setUser({ ...user, role: e.target.value });
-  };
-
-  const hasChanges = () => {
-    if (isNew) {
-      return Boolean(
-        user.firstName.trim() &&
-        user.lastName.trim() &&
-        user.email.trim() &&
-        user.address && user.address.trim() &&
-        password.trim()
-      );
-    }
-    if (!originalUser) return false;
-    return (
-      user.firstName !== originalUser.firstName ||
-      user.lastName !== originalUser.lastName ||
-      user.email !== originalUser.email ||
-      user.role !== originalUser.role ||
-      user.address !== originalUser.address
-    );
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
-      let res;
-      let updatedUserData = { ...user };
-      const allowedFields = ["email", "password", "firstName", "lastName", "address", "role"];
-      Object.keys(updatedUserData).forEach(key => {
-        if (!allowedFields.includes(key) || updatedUserData[key] === undefined) {
-          delete updatedUserData[key];
-        }
+      const token = localStorage.getItem("token");
+      const formDataToSend = new FormData();
+      
+      formDataToSend.append("firstName", formData.firstName);
+      formDataToSend.append("lastName", formData.lastName);
+      formDataToSend.append("email", formData.email);
+      if (formData.password) {
+        formDataToSend.append("password", formData.password);
+      }
+      formDataToSend.append("address", formData.address);
+
+      const url = isEditing 
+        ? `http://localhost:8080/users/role/${id}`
+        : "http://localhost:8080/users";
+
+      const method = isEditing ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formDataToSend,
       });
-      if (!updatedUserData.password) delete updatedUserData.password;
-      if (isNew) {
-        const data = new FormData();
-        data.append("firstName", user.firstName);
-        data.append("lastName", user.lastName);
-        data.append("email", user.email);
-        data.append("address", user.address);
-        data.append("password", password);
-        data.append("role", user.role);
-        if (user.image && typeof user.image !== "string") {
-          data.append("image", user.image);
-        }
-        res = await fetch(`http://localhost:8080/users`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: data,
-        });
-      } else {
-        res = await fetch(`http://localhost:8080/users/role/${id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatedUserData),
-        });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al guardar usuario");
       }
-      if (!res.ok) throw new Error(isNew ? "Error al crear usuario" : "Error al actualizar usuario");
-      if (!isNew && currentUser && String(currentUser.id) === String(id)) {
-        const updated = await res.json().catch(() => user);
-        updateUser(updated);
-      }
+
       navigate("/admin/users");
-    } catch (e) {
-      alert(e.message);
+    } catch (err) {
+      setError(err.message || "Error al guardar usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div>Cargando usuario...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
-  if (!user) return null;
+  if (!isAuthenticated) {
+    navigate("/");
+    return null;
+  }
 
   return (
-    <div className="max-w-xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6 text-green-800 font-['Merriweather']">{isNew ? "Crear Usuario" : "Editar Usuario"}</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        {!isNew && (
-          <div>
-            <label className="block text-gray-700">ID</label>
-            <input value={user.id} disabled className="w-full bg-gray-100 text-gray-500 rounded px-3 py-2" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
+          {isEditing ? "Editar Usuario" : "Crear Nuevo Usuario"}
+        </h1>
+
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
           </div>
         )}
-        <div>
-          <label className="block text-gray-700">Nombre</label>
-          <input name="firstName" value={user.firstName || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Apellido</label>
-          <input name="lastName" value={user.lastName || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Email</label>
-          <input name="email" value={user.email || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Dirección</label>
-          <input name="address" value={user.address || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        {!isNew && (
-          <div>
-            <label className="block text-gray-700">Rol</label>
-            <select name="role" value={user.role} onChange={handleRoleChange} className="w-full border rounded px-3 py-2">
-              <option value="USER">USER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
+
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
+                className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Apellido
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
+                className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña {isEditing && "(dejar vacío para mantener la actual)"}
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required={!isEditing}
+                className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dirección
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                required
+                className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+              />
+            </div>
+
+            {isEditing && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rol
+                </label>
+                <select
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full h-12 border border-gray-300 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
+                >
+                  <option value="USER">Usuario</option>
+                  <option value="ADMIN">Administrador</option>
+                </select>
+              </div>
+            )}
           </div>
-        )}
-        {isNew && (
-          <div>
-            <label className="block text-gray-700">Contraseña</label>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full border rounded px-3 py-2"
-              required
-            />
+
+          <div className="flex justify-end space-x-4 mt-6">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/users")}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {loading ? "Guardando..." : isEditing ? "Actualizar" : "Crear"}
+            </button>
           </div>
-        )}
-        <div className="flex gap-4 mt-6">
-          <button
-            type="submit"
-            className={`px-6 py-2 rounded transition-colors font-semibold ${hasChanges() ? "bg-green-700 text-white hover:bg-green-800" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-            disabled={!hasChanges()}
-          >
-            {isNew ? "Crear" : "Guardar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/admin/users")}
-            className="px-6 py-2 rounded font-semibold bg-green-200 text-green-900 hover:bg-green-300 transition-colors"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

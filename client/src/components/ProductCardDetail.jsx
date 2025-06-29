@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useCart } from "../context/CartContext";
+import { useDispatch } from "react-redux";
+import { addToCart } from "../redux/cartSlice";
 
 const ShoppingCartIcon = ({ className }) => (
   <svg
@@ -20,7 +21,7 @@ const ShoppingCartIcon = ({ className }) => (
 
 const ProductCardDetail = ({ product }) => {
   const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
 
   const handleQuantityChange = (amount) => {
     const newQuantity = quantity + amount;
@@ -30,9 +31,7 @@ const ProductCardDetail = ({ product }) => {
   };
 
   const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
+    dispatch(addToCart({ product, quantity }));
   };
 
   const imageUrl =

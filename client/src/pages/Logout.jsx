@@ -1,20 +1,21 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { logout } from '../redux/userSlice';
 
 const Logout = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    logout();
+    dispatch(logout());
 
     const timer = setTimeout(() => {
       navigate('/');
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate, logout]);
+  }, [navigate, dispatch]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-green-50">

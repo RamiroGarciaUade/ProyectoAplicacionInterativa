@@ -1,240 +1,299 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated } from "../../redux/userSlice";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 
 const EditProduct = () => {
   const { id } = useParams();
-  const { token } = useAuth();
-  const isNew = id === "new";
-  const [product, setProduct] = useState({
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     stock: "",
     categoryId: "",
-    discountPercentage: 0
   });
-  const [originalProduct, setOriginalProduct] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(!isNew);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState(false);
   const [imageFile, setImageFile] = useState(null);
-  const [imageFileName, setImageFileName] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:8080/categories", {
-          headers: { Authorization: `Bearer ${token}` },
+        const token = localStorage.getItem("token");
+        
+        // Fetch product
+        const productResponse = await fetch(`http://localhost:8080/products/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
-        if (!res.ok) throw new Error("Error al cargar categorías");
-        const data = await res.json();
-        setCategories(data);
-      } catch (e) {
-        setError(e.message);
+
+        if (!productResponse.ok) {
+          throw new Error("Error al cargar producto");
+        }
+
+        const productData = await productResponse.json();
+        setProduct(productData);
+        setFormData({
+          name: productData.name || "",
+          description: productData.description || "",
+          price: productData.price || "",
+          stock: productData.stock || "",
+          categoryId: productData.categoryId || "",
+        });
+        setImagePreview(
+          productData.imageData && productData.imageType
+            ? `data:${productData.imageType};base64,${productData.imageData}`
+            : ""
+        );
+
+        // Fetch categories
+        const categoriesResponse = await fetch("http://localhost:8080/categories", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json();
+          setCategories(categoriesData);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError("Error al cargar datos");
+        setLoading(false);
       }
     };
-    fetchCategories();
-    if (!isNew) {
-      const fetchProduct = async () => {
-        try {
-          const res = await fetch(`http://localhost:8080/products/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Error al cargar producto");
-          const data = await res.json();
-          setProduct(data);
-          setOriginalProduct(data);
-        } catch (e) {
-          setError(e.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchProduct();
+
+    if (isAuthenticated) {
+      fetchData();
     }
-  }, [id, token, isNew]);
+  }, [id, isAuthenticated]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProduct({ ...product, [name]: value });
-  };
-
-  const handleCategoryChange = (e) => {
-    setProduct({ ...product, categoryId: e.target.value });
-  };
-
-  const handleDiscountChange = (e) => {
-    let value = parseInt(e.target.value, 10);
-    if (isNaN(value)) value = 0;
-    if (value < 0) value = 0;
-    if (value > 100) value = 100;
-    // Solo múltiplos de 5
-    value = Math.round(value / 5) * 5;
-    setProduct({ ...product, discountPercentage: value });
-  };
-
-  const handleDiscountStep = (step) => {
-    let value = product.discountPercentage + step;
-    if (value < 0) value = 0;
-    if (value > 100) value = 100;
-    setProduct({ ...product, discountPercentage: value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    setImageFile(file);
-    setImageFileName(file ? file.name : "");
-  };
-
-  const hasChanges = () => {
-    if (isNew) {
-      return (
-        product.name.trim() &&
-        product.description.trim() &&
-        product.price &&
-        product.stock &&
-        product.categoryId !== ""
-      );
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
-    if (!originalProduct) return false;
-    return (
-      product.name !== originalProduct.name ||
-      product.description !== originalProduct.description ||
-      String(product.price) !== String(originalProduct.price) ||
-      String(product.stock) !== String(originalProduct.stock) ||
-      String(product.categoryId) !== String(originalProduct.categoryId) ||
-      product.discountPercentage !== originalProduct.discountPercentage ||
-      imageFile
-    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
+
     try {
-      let res;
-      const formData = new FormData();
-      formData.append("name", product.name);
-      formData.append("description", product.description);
-      formData.append("price", product.price);
-      formData.append("stock", product.stock);
-      formData.append("categoryId", product.categoryId);
-      formData.append("discountPercentage", product.discountPercentage);
+      const token = localStorage.getItem("token");
+      const data = new FormData();
+      
+      data.append("name", formData.name);
+      data.append("description", formData.description);
+      data.append("price", formData.price);
+      data.append("stock", formData.stock);
+      data.append("categoryId", formData.categoryId);
+      
       if (imageFile) {
-        formData.append("image", imageFile);
+        data.append("image", imageFile);
       }
-      if (isNew) {
-        res = await fetch(`http://localhost:8080/products`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-      } else {
-        res = await fetch(`http://localhost:8080/products/${id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+
+      const response = await fetch(`http://localhost:8080/products/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al actualizar producto");
       }
-      if (!res.ok) throw new Error(isNew ? "Error al crear producto" : "Error al actualizar producto");
-      navigate("/admin/products");
-    } catch (e) {
-      alert(e.message);
+
+      const updatedProduct = await response.json();
+      setProduct(updatedProduct);
+      setSuccess(true);
+      setImageFile(null);
+    } catch (err) {
+      setError("Error al actualizar producto");
     }
   };
 
-  if (loading) return <div>Cargando producto...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
-  if (!product) return null;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6 text-green-800 font-['Merriweather']">{isNew ? "Crear Producto" : "Editar Producto"}</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        {!isNew && (
-          <div>
-            <label className="block text-gray-700">ID</label>
-            <input value={product.id} disabled className="w-full bg-gray-100 text-gray-500 rounded px-3 py-2" />
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800">
+            Editar Producto
+          </h1>
+          <button
+            onClick={() => navigate("/admin/products")}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Volver
+          </button>
+        </div>
+
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            Producto actualizado correctamente
           </div>
         )}
-        <div>
-          <label className="block text-gray-700">Nombre</label>
-          <input name="name" value={product.name || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Descripción</label>
-          <textarea name="description" value={product.description || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={3} />
-        </div>
-        <div>
-          <label className="block text-gray-700">Precio</label>
-          <input type="number" name="price" value={product.price} onChange={handleChange} className="w-full border rounded px-3 py-2" min="0" step="0.01" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Stock</label>
-          <input type="number" name="stock" value={product.stock} onChange={handleChange} className="w-full border rounded px-3 py-2" min="0" />
-        </div>
-        <div>
-          <label className="block text-gray-700">Categoría</label>
-          <select name="categoryId" value={product.categoryId} onChange={handleCategoryChange} className="w-full border rounded px-3 py-2">
-            <option value="">Seleccionar categoría</option>
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-gray-700">Descuento (%)</label>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => handleDiscountStep(-5)} className="bg-gray-200 px-3 py-1 rounded text-lg font-bold" tabIndex={-1}>-</button>
-            <input
-              type="number"
-              name="discountPercentage"
-              value={product.discountPercentage}
-              readOnly
-              className="w-16 border rounded px-2 py-1 text-center bg-gray-100"
-            />
-            <button type="button" onClick={() => handleDiscountStep(5)} className="bg-gray-200 px-3 py-1 rounded text-lg font-bold" tabIndex={-1}>+</button>
-          </div>
-        </div>
-        <div>
-          <label className="block text-gray-700">Imagen</label>
-          <div className="flex items-center gap-2">
-            <span className="flex-1 px-3 py-2 border rounded bg-gray-50 text-gray-700">
-              {imageFileName || "Ningún archivo seleccionado"}
-            </span>
-            <label className="bg-green-200 text-green-900 px-4 py-2 rounded cursor-pointer hover:bg-green-300 font-medium">
-              Seleccionar archivo
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Descripción
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Precio
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  step="0.01"
+                  min="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Stock
+                </label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categoría
+              </label>
+              <select
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              >
+                <option value="">Seleccionar categoría</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Imagen
+              </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="hidden"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               />
-            </label>
-          </div>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/products")}
+                className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Guardar Cambios
+              </button>
+            </div>
+          </form>
         </div>
-        <div className="flex gap-4 mt-6">
-          <button
-            type="submit"
-            className={`px-6 py-2 rounded transition-colors font-semibold ${hasChanges() ? "bg-green-700 text-white hover:bg-green-800" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-            disabled={!hasChanges()}
-          >
-            {isNew ? "Crear" : "Guardar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/admin/products")}
-            className="px-6 py-2 rounded font-semibold bg-green-200 text-green-900 hover:bg-green-300 transition-colors"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };

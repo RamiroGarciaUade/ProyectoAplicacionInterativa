@@ -166,4 +166,23 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(Map.of("message", "Orden de compra número: " + id + "  cancelada con éxito"));
     }
 
+    // PUT /purchase-orders/{id}/status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> updateOrderStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String status = request.get("status");
+        if (status == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Status is required"));
+        }
+
+        try {
+            PurchaseOrderStatus orderStatus = PurchaseOrderStatus.valueOf(status.toUpperCase());
+            purchaseOrderService.updateOrderStatus(id, orderStatus);
+            return ResponseEntity.ok(Map.of("message", "Estado de la orden actualizado con éxito"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Estado inválido"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
 }

@@ -5,21 +5,21 @@ const AddedToCartNotification = ({ productName, productImage, productPrice, cart
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true); // Inicia la animación de entrada
+    setIsVisible(true);
 
     const visibilityTimer = setTimeout(() => {
-      setIsVisible(false); // Inicia la animación de salida
-    }, 3000); // Comienza a desaparecer a los 3 segundos
+      setIsVisible(false);
+    }, 3000);
 
     const closeTimer = setTimeout(() => {
-      onClose(); // Llama a onClose después de que la animación de salida pueda completarse
-    }, 3300); // Cierra completamente después de 3.3 segundos (300ms para la animación de salida)
+      onClose();
+    }, 3300); // Cierra  después de 3.3 segundos
 
     return () => {
       clearTimeout(visibilityTimer);
       clearTimeout(closeTimer);
     };
-  }, [onClose]); // El efecto solo se re-ejecuta si onClose cambia (lo cual no debería)
+  }, [onClose]); // se ejecuta si onClose cambia
 
   return (
     <div 
@@ -33,7 +33,7 @@ const AddedToCartNotification = ({ productName, productImage, productPrice, cart
         {productImage && (
           <img src={productImage} alt={productName} className="w-14 h-14 object-cover rounded-md mr-3 flex-shrink-0 border border-gray-200" />
         )}
-        <div className="flex-grow overflow-hidden min-w-0"> {/* Ayuda con el truncado */}
+        <div className="flex-grow overflow-hidden min-w-0">
           <div className="flex justify-between items-center">
             <p className="text-xs font-semibold text-green-600 mb-0.5">
               {quantityAdded > 1 ? `${quantityAdded} x ` : ''}¡Agregado al carrito!
@@ -63,7 +63,7 @@ const AddedToCartNotification = ({ productName, productImage, productPrice, cart
       </div>
       {cartItemCount > 0 && (
           <p className="text-xs text-gray-500 mt-2 mb-2 pl-1">
-            Subtotal ({cartItemCount} {cartItemCount === 1 ? 'producto' : 'productos'}): {/* Aquí podrías mostrar el subtotal del carrito si lo pasas */}
+            Subtotal ({cartItemCount} {cartItemCount === 1 ? 'producto' : 'productos'}):
           </p>
       )}
       <Link 

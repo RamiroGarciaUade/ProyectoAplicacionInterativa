@@ -2,16 +2,20 @@ package com.proyecto.uade.dieteticaYuyo.service;
 
 import java.util.List;
 
-import com.proyecto.uade.dieteticaYuyo.entity.*;
-import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInsufficientStockException;
-import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInvalidStateException;
-import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.proyecto.uade.dieteticaYuyo.entity.Product;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseItem;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrder;
+import com.proyecto.uade.dieteticaYuyo.entity.PurchaseOrderStatus;
+import com.proyecto.uade.dieteticaYuyo.entity.User;
+import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInsufficientStockException;
+import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderInvalidStateException;
+import com.proyecto.uade.dieteticaYuyo.exceptions.PurchaseOrderNotFoundException;
 import com.proyecto.uade.dieteticaYuyo.repository.PurchaseOrderRepository;
 
 @Service
@@ -119,6 +123,46 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         }
 
         order.setStatus(PurchaseOrderStatus.CANCELLED);
+        purchaseOrderRepository.save(order);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public void updateOrderStatus(Long id, PurchaseOrderStatus status) throws PurchaseOrderNotFoundException, PurchaseOrderInsufficientStockException {
+        PurchaseOrder order = getPurchaseOrderById(id);
+
+        switch (status) {
+            case PENDING:
+                // Solo permite pending si esta cancelada
+                if (order.getStatus() != PurchaseOrderStatus.CANCELLED) {
+                    throw new PurchaseOrderInvalidStateException(id);
+                }
+                order.setStatus(PurchaseOrderStatus.PENDING);
+                break;
+            case CONFIRMED:
+                if (order.getStatus() != PurchaseOrderStatus.PENDING) {
+                    throw new PurchaseOrderInvalidStateException(id);
+                }
+                // Chequea stock
+                for (PurchaseItem item : order.getItems()) {
+                    Product product = item.getProduct();
+                    int quantity = item.getQuantity();
+
+                    if (product.getStock() < quantity) {
+                        throw new PurchaseOrderInsufficientStockException(product.getName(), product.getStock(), quantity);
+                    }
+                    product.setStock(product.getStock() - quantity);
+                }
+                order.setStatus(PurchaseOrderStatus.CONFIRMED);
+                break;
+            case CANCELLED:
+                if (order.getStatus() != PurchaseOrderStatus.PENDING) {
+                    throw new PurchaseOrderInvalidStateException(id);
+                }
+                order.setStatus(PurchaseOrderStatus.CANCELLED);
+                break;
+        }
+
         purchaseOrderRepository.save(order);
     }
 

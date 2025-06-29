@@ -1,5 +1,6 @@
 import React from "react";
-import { useCart } from "../context/CartContext"; // Asegúrate que la ruta sea correcta
+import { useDispatch } from "react-redux";
+import { addToCart } from "../redux/cartSlice";
 import { Link } from "react-router-dom";
 
 const ProductCard = ({ product }) => {
@@ -7,13 +8,13 @@ const ProductCard = ({ product }) => {
     ? `data:${product.imageType};base64,${product.imageData}`
     : "https://placehold.co/300x300/EBF5FB/17202A?text=Sin+Imagen";
 
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
 
   const handleAddToCart = (e) => {
     e.stopPropagation(); // Evita que el click en el botón también active el Link del card
     e.preventDefault(); // Evita la navegación si el botón está dentro de un Link
     if (product.stock > 0) {
-      addToCart(product);
+      dispatch(addToCart({ product, quantity: 1 }));
       // Opcional: Aquí podrías disparar una notificación global
       // console.log(`${product.name} agregado al carrito.`);
     }

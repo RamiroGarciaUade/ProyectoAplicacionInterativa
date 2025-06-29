@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser, selectIsAuthenticated } from '../redux/userSlice';
 import { useNavigate } from 'react-router-dom';
 
 const Orders = () => {
-  const { token, user } = useAuth();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +40,7 @@ const Orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await fetch(`http://localhost:8080/purchase-orders/user/${user.id}`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -58,12 +61,12 @@ const Orders = () => {
       }
     };
 
-    if (token && user) {
+    if (isAuthenticated && user) {
       fetchOrders();
     } else {
       navigate('/');
     }
-  }, [token, user, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   if (isLoading) {
     return (

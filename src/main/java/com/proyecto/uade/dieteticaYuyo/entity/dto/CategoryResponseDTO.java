@@ -1,6 +1,7 @@
 package com.proyecto.uade.dieteticaYuyo.entity.dto;
 
 import com.proyecto.uade.dieteticaYuyo.entity.Category;
+
 import lombok.Builder;
 import lombok.Data;
 

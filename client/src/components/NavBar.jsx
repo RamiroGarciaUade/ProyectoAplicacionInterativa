@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useSelector } from "react-redux";
+import { selectCartItemCount } from "../redux/cartSlice";
+import { selectUser, selectIsAuthenticated } from "../redux/userSlice";
 import AdminLink from "../pages/AdminProduct";
 import UserCart from "../components/UserCart"; // Nuevo componente
 import { jwtDecode } from "jwt-decode";
@@ -10,19 +11,24 @@ const NavBar = ({ onLoginClick }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); // Nuevo estado para el término de búsqueda
-  const { cartItems } = useCart();
-  const { isAuthenticated, logout, token, user } = useAuth();
+  const cartItemsCount = useSelector(selectCartItemCount);
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate(); // Inicializa useNavigate
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isAuthenticated && user) {
       try {
-        const decoded = jwtDecode(token);
-        console.log("Token decodificado:", decoded);
-        const role = decoded?.role || decoded?.authorities?.[0]?.authority;
-        console.log("Rol encontrado:", role);
-        setUserRole(role);
+        // Intentar obtener el rol del token si está disponible
+        const token = localStorage.getItem("token");
+        if (token) {
+          const decoded = jwtDecode(token);
+          console.log("Token decodificado:", decoded);
+          const role = decoded?.role || decoded?.authorities?.[0]?.authority;
+          console.log("Rol encontrado:", role);
+          setUserRole(role);
+        }
       } catch (error) {
         console.error("Error decodificando token:", error);
         setUserRole(null);
@@ -30,12 +36,7 @@ const NavBar = ({ onLoginClick }) => {
     } else {
       setUserRole(null);
     }
-  }, [isAuthenticated, token]);
-
-  const cartItemsCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     navigate('/logout');

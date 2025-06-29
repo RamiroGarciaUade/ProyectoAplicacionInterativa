@@ -1,136 +1,176 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../../context/AuthContext";
-
-const statusColors = {
-  PENDING: "bg-yellow-400 text-white",
-  CONFIRMED: "bg-green-700 text-white",
-  CANCELLED: "bg-red-600 text-white"
-};
-
-const statusLabels = {
-  PENDING: "Pendiente",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada"
-};
+import { useSelector, useDispatch } from "react-redux";
+import { selectIsAuthenticated } from "../../redux/userSlice";
+import { 
+  selectAdminOrders, 
+  selectAdminLoading, 
+  selectAdminError,
+  fetchAllOrders,
+  updateOrderStatus 
+} from "../../redux/adminSlice";
+import { useEffect } from "react";
 
 const AdminOrders = () => {
-  const { token } = useAuth();
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const orders = useSelector(selectAdminOrders);
+  const loading = useSelector(selectAdminLoading);
+  const error = useSelector(selectAdminError);
+  const dispatch = useDispatch();
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:8080/purchase-orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cargar órdenes");
-      const data = await res.json();
-      setOrders(data);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'bg-yellow-500';
+      case 'CONFIRMED':
+        return 'bg-green-500';
+      case 'CANCELLED':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  const translateStatus = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return 'PENDIENTE';
+      case 'CONFIRMED':
+        return 'CONFIRMADA';
+      case 'CANCELLED':
+        return 'CANCELADA';
+      default:
+        return status;
     }
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (isAuthenticated) {
+      dispatch(fetchAllOrders());
+    }
+  }, [isAuthenticated, dispatch]);
 
-  const handleConfirm = async (id) => {
-    if (!window.confirm("¿Confirmar esta orden?")) return;
+  const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const res = await fetch(`http://localhost:8080/purchase-orders/${id}/confirm`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al confirmar orden");
-      fetchOrders();
-    } catch (e) {
-      alert(e.message);
+      await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
+    } catch (err) {
+      alert("Error al actualizar el estado de la orden");
     }
   };
 
-  const handleCancel = async (id) => {
-    if (!window.confirm("¿Cancelar esta orden?")) return;
-    try {
-      const res = await fetch(`http://localhost:8080/purchase-orders/${id}/cancel`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al cancelar orden");
-      fetchOrders();
-    } catch (e) {
-      alert(e.message);
-    }
-  };
+  if (loading.orders) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return d.toLocaleString("es-AR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-  };
-
-  if (loading) return <div>Cargando órdenes...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (error.orders) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error.orders}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6 text-green-800 font-['Merriweather']">Panel de Órdenes</h1>
-      <table className="w-full border rounded-lg bg-white">
-        <thead>
-          <tr className="bg-green-100">
-            <th className="py-2 px-4 text-left font-semibold">ID</th>
-            <th className="py-2 px-4 text-left font-semibold">Fecha</th>
-            <th className="py-2 px-4 text-left font-semibold">ID Usuario</th>
-            <th className="py-2 px-4 text-left font-semibold">Email Usuario</th>
-            <th className="py-2 px-4 text-left font-semibold">Subtotal</th>
-            <th className="py-2 px-4 text-left font-semibold">Estado</th>
-            <th className="py-2 px-4 text-left font-semibold">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map(order => (
-            <tr key={order.id} className="border-t">
-              <td className="py-2 px-4 text-left">{order.id}</td>
-              <td className="py-2 px-4 text-left">{formatDate(order.orderDate)}</td>
-              <td className="py-2 px-4 text-left">{order.user?.id}</td>
-              <td className="py-2 px-4 text-left">{order.user?.email}</td>
-              <td className="py-2 px-4 text-left">{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(order.subtotal)}</td>
-              <td className="py-2 px-4 text-left">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[order.status] || "bg-gray-300 text-gray-700"}`}>
-                  {statusLabels[order.status] || order.status}
-                </span>
-              </td>
-              <td className="py-2 px-4 flex gap-2">
-                {order.status === "PENDING" && (
-                  <>
-                    <button
-                      className="bg-green-700 hover:bg-green-800 text-white p-2 rounded transition-colors"
-                      onClick={() => handleConfirm(order.id)}
-                      title="Aceptar"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </button>
-                    <button
-                      className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition-colors"
-                      onClick={() => handleCancel(order.id)}
-                      title="Cancelar"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8 text-center">
+        Gestión de Órdenes
+      </h1>
+      
+      {orders.length === 0 ? (
+        <div className="text-center text-gray-600">
+          No hay órdenes disponibles
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {orders.map((order) => (
+            <div key={order.id} className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Orden #{order.id}
+                  </h2>
+                  <p className="text-gray-600">
+                    Cliente: {order.user?.firstName} {order.user?.lastName}
+                  </p>
+                  <p className="text-gray-600">
+                    {new Date(order.orderDate).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-semibold text-green-600">
+                    ${order.subtotal?.toFixed(2)}
+                  </p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-white text-sm ${getStatusColor(order.status)}`}>
+                    {translateStatus(order.status)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Productos:</h3>
+                <div className="space-y-2">
+                  {order.items?.map((item) => (
+                    <div key={item.productId} className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">
+                        {item.productName} x{item.quantity}
+                      </span>
+                      <span className="text-gray-800">
+                        ${(item.unitPrice * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Cambiar Estado:</h3>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleStatusChange(order.id, 'PENDING')}
+                    className={`px-3 py-1 rounded text-sm ${
+                      order.status === 'PENDING' 
+                        ? 'bg-yellow-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-yellow-100'
+                    }`}
+                  >
+                    Pendiente
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(order.id, 'CONFIRMED')}
+                    className={`px-3 py-1 rounded text-sm ${
+                      order.status === 'CONFIRMED' 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-green-100'
+                    }`}
+                  >
+                    Confirmada
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(order.id, 'CANCELLED')}
+                    className={`px-3 py-1 rounded text-sm ${
+                      order.status === 'CANCELLED' 
+                        ? 'bg-red-500 text-white' 
+                        : 'bg-gray-200 text-gray-700 hover:bg-red-100'
+                    }`}
+                  >
+                    Cancelada
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      )}
     </div>
   );
 };

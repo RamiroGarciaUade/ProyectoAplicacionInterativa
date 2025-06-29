@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser, selectUserLoading, selectUserError, clearError } from "../redux/userSlice";
 import { useNavigate } from "react-router-dom";
 
 const Register = ({ onClose, onSwitch }) => {
@@ -13,9 +13,11 @@ const Register = ({ onClose, onSwitch }) => {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  const loading = useSelector(selectUserLoading);
+  const error = useSelector(selectUserError);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,31 +62,21 @@ const Register = ({ onClose, onSwitch }) => {
     e.preventDefault();
     const validationErrors = validate();
     setErrors(validationErrors);
-    setLoading(true);
 
     if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
+      dispatch(clearError());
+      
       try {
-        const data = await authService.register(formData);
-
-        if (!data || !data.access_token) {
-          throw new Error("No se recibió token de acceso");
-        }
-
-        login(data.access_token, data.user);
+        await dispatch(registerUser(formData)).unwrap();
         onClose();
         navigate("/");
       } catch (err) {
         console.error("Error en el registro:", err);
         setErrors({ 
-          general: err.message === "Registration failed" 
-            ? "Error al registrar. Por favor, intente nuevamente." 
-            : err.message 
+          general: err || "Error al registrar. Por favor, intente nuevamente."
         });
-      } finally {
-        setLoading(false);
       }
-    } else {
-      setLoading(false);
     }
   };
 
@@ -110,9 +102,9 @@ const Register = ({ onClose, onSwitch }) => {
           Registro
         </h2>
 
-        {errors.general && (
+        {(errors.general || error) && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center text-sm">
-            {errors.general}
+            {errors.general || error}
           </div>
         )}
 

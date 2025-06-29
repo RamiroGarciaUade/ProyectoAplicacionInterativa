@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser, selectUserLoading, selectUserError, clearError } from "../redux/userSlice";
 
 const Login = ({ onClose, onSwitch }) => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  const loading = useSelector(selectUserLoading);
+  const error = useSelector(selectUserError);
 
   const handleClose = () => {
     if (location.pathname === "/checkout") {
@@ -44,17 +46,14 @@ const Login = ({ onClose, onSwitch }) => {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    setLoading(true);
     setErrors({});
+    dispatch(clearError());
 
     try {
-      const data = await authService.login(formData.email, formData.password);
-      login(data.access_token, data.user);
+      await dispatch(loginUser({ email: formData.email, password: formData.password })).unwrap();
       onClose();
     } catch (err) {
-      setErrors({ general: "Email o contraseña incorrectos." });
-    } finally {
-      setLoading(false);
+      setErrors({ general: err || "Email o contraseña incorrectos." });
     }
   };
 
@@ -73,9 +72,9 @@ const Login = ({ onClose, onSwitch }) => {
           Login
         </h2>
 
-        {errors.general && (
+        {(errors.general || error) && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center text-sm">
-            {errors.general}
+            {errors.general || error}
           </div>
         )}
 

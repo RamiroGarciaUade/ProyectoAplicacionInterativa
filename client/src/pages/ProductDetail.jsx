@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useSelector, useDispatch } from "react-redux";
+import { addToCart, selectCartItemCount } from "../redux/cartSlice";
 import AddedToCartNotification from "../components/AddedToCartNotification";
 // import ProductCarousel from "../components/ProductCarousel"; // Descomenta si implementas productos relacionados
 
@@ -13,7 +14,8 @@ const ProductDetail = () => {
   const [categories, setCategories] = useState([]);
   // const [relatedProducts, setRelatedProducts] = useState([]);
 
-  const { addToCart, cartItems } = useCart();
+  const dispatch = useDispatch();
+  const currentCartItemCount = useSelector(selectCartItemCount);
 
   useEffect(() => {
     fetch("http://localhost:8080/categories")
@@ -64,9 +66,7 @@ const ProductDetail = () => {
       return;
     }
 
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
+    dispatch(addToCart({ product, quantity }));
 
     setNotificationProduct({
       name: product.name,
@@ -89,8 +89,6 @@ const ProductDetail = () => {
   const originalPrice = parseFloat(product.price);
   const discountPercentage = product.discountPercentage ? parseFloat(product.discountPercentage) : 0;
   const effectivePrice = calculateDiscountedPrice(originalPrice, discountPercentage);
-
-  const currentCartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);

@@ -1,5 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { selectCartNotification, selectCartItemCount, closeNotification } from "./redux/cartSlice";
+import { initializeAuth } from "./redux/userSlice";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -14,8 +17,6 @@ import Success from "./pages/Success";
 import Logout from "./pages/Logout";
 import Profile from "./pages/Profile";
 import Orders from "./pages/Orders";
-import { AuthProvider } from "./context/AuthContext";
-import { CartProvider, useCart } from "./context/CartContext"; // Importa useCart
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AddedToCartNotification from "./components/AddedToCartNotification"; // Importa el componente
 import AdminRoute from "./routes/AdminRoute";
@@ -27,12 +28,19 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import EditCategory from "./pages/admin/EditCategory";
 import AdminOrders from "./pages/admin/AdminOrders";
 
-// Un componente wrapper para acceder al contexto del carrito
+// Un componente wrapper para acceder al estado de Redux
 const AppContent = () => {
-  const { notification, closeNotification, cartItemsCount } = useCart(); // Obtén el estado de la notificación
+  const notification = useSelector(selectCartNotification);
+  const cartItemsCount = useSelector(selectCartItemCount);
+  const dispatch = useDispatch();
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const location = useLocation();
+
+  // Inicializar autenticación al cargar la app
+  useEffect(() => {
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -119,12 +127,12 @@ const AppContent = () => {
       <Footer />
       {notification.show && (
         <AddedToCartNotification
-          productName={notification.productName}
+          productName={notification.message}
           productImage={notification.productImage}
           productPrice={notification.productPrice}
           quantityAdded={notification.quantityAdded}
           cartItemCount={cartItemsCount} // Pasar el conteo total actual
-          onClose={closeNotification}
+          onClose={() => dispatch(closeNotification())}
         />
       )}
     </div>
@@ -132,15 +140,7 @@ const AppContent = () => {
 };
 
 function App() {
-  return (
-    <AuthProvider>
-      <CartProvider>
-        {" "}
-        {/* CartProvider envuelve AppContent */}
-        <AppContent />
-      </CartProvider>
-    </AuthProvider>
-  );
+  return <AppContent />;
 }
 
 export default App;
