@@ -6,6 +6,7 @@ import {
   selectCartItems, 
   selectCartTotal,
   selectValidationLoading,
+  selectValidationError,
   selectRemovedProducts,
   clearCart,
   validateCartItems,
@@ -17,6 +18,7 @@ import {
   selectOrdersError,
   clearError 
 } from "../redux/slices/orderSlice";
+import { selectUserProfile } from "../redux/slices/userSlice";
 import AddressForm from "../components/AddressForm";
 import PaymentForm from "../components/PaymentForm";
 
@@ -27,8 +29,10 @@ const Checkout = () => {
   const cartItems = useAppSelector(selectCartItems);
   const totalAmount = useAppSelector(selectCartTotal);
   const validationLoading = useAppSelector(selectValidationLoading);
+  const validationError = useAppSelector(selectValidationError);
   const removedProducts = useAppSelector(selectRemovedProducts);
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const user = useAppSelector(selectUserProfile);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isLoading = useAppSelector(selectOrdersLoading);
   const error = useAppSelector(selectOrdersError);
   
@@ -189,6 +193,12 @@ const Checkout = () => {
         Finalizar Compra
       </h1>
       
+      {validationError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+          Error al validar los productos del carrito
+        </div>
+      )}
+      
       {showRemovedNotification && (
         <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex">
@@ -328,9 +338,9 @@ const Checkout = () => {
 
           <button
             onClick={handleCheckout}
-            disabled={!isFormValid || isLoading}
+            disabled={!isFormValid || isLoading || !!validationError}
             className={`w-full py-3 px-6 rounded-lg font-semibold transition-colors ${
-              isFormValid && !isLoading
+              isFormValid && !isLoading && !validationError
                 ? 'bg-green-800 text-white hover:bg-green-700'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}

@@ -2,16 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useAppDispatch } from '../hooks/useAppDispatch';
-import { updateUserProfile, selectAuthLoading, selectAuthError, clearError } from '../redux/slices/authSlice';
-import { jwtDecode } from 'jwt-decode';
+import { selectAuthUserId, selectAuthIsAuthenticated, clearError } from '../redux/slices/authSlice';
+import { 
+  fetchUserProfile, 
+  updateUserProfile, 
+  selectUserProfile, 
+  selectUserLoading, 
+  selectUserError,
+  clearUserError,
+  clearUserProfile
+} from '../redux/slices/userSlice';
 
 const Profile = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
-  const isLoading = useAppSelector(selectAuthLoading);
-  const error = useAppSelector(selectAuthError);
+  const userId = useAppSelector(selectAuthUserId);
+  const isAuthenticated = useAppSelector(selectAuthIsAuthenticated);
+  const user = useAppSelector(selectUserProfile);
+  const isLoading = useAppSelector(selectUserLoading);
+  const error = useAppSelector(selectUserError);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -31,6 +41,7 @@ const Profile = () => {
 
   useEffect(() => {
     dispatch(clearError());
+    dispatch(clearUserError());
   }, [dispatch]);
 
   useEffect(() => {
@@ -44,7 +55,15 @@ const Profile = () => {
   }, [user]);
 
   useEffect(() => {
-    if (user && isAuthenticated) {
+    if (userId && isAuthenticated) {
+      dispatch(fetchUserProfile(userId));
+    } else if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [userId, isAuthenticated, navigate, dispatch]);
+
+  useEffect(() => {
+    if (user) {
       setFormData({
         email: user.email || '',
         address: user.address || '',
@@ -62,10 +81,8 @@ const Profile = () => {
         imageUrl: user.imageData && user.imageType ? `data:${user.imageType};base64,${user.imageData}` : '',
         role: user.role || ''
       });
-    } else {
-      navigate('/');
     }
-  }, [user, isAuthenticated, navigate]);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -105,22 +122,9 @@ const Profile = () => {
       if (formData.role) data.append('role', formData.role);
       if (imageFile) data.append('image', imageFile);
 
-      const result = await dispatch(updateUserProfile({ userId: user.id, userData: data })).unwrap();
+      await dispatch(updateUserProfile({ userId, userData: data })).unwrap();
       
-      setOriginalData({
-        email: result.email || '',
-        address: result.address || '',
-        firstName: result.firstName || '',
-        lastName: result.lastName || '',
-        imageUrl: result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : '',
-        role: result.role || ''
-      });
       setImageFile(null);
-      setImagePreview(result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : '');
-      setFormData(prev => ({
-        ...prev,
-        imageUrl: result.imageData && result.imageType ? `data:${result.imageType};base64,${result.imageData}` : ''
-      }));
       setSuccess(true);
       setDirty(false);
     } catch (err) {
@@ -133,6 +137,7 @@ const Profile = () => {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-green-700">Cargando perfil...</p>
       </div>
     );
   }
@@ -144,15 +149,9 @@ const Profile = () => {
           Mis Datos Personales
         </h1>
         
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-        
-        {localError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {localError}
+        {(localError || error) && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+            {localError || error}
           </div>
         )}
         

@@ -21,13 +21,23 @@ export const fetchUserOrders = createAsyncThunk(
   'orders/fetchUserOrders',
   async (_, { getState, rejectWithValue }) => {
     try {
-      const { token, user } = getState().auth;
-      const response = await api.get(`/purchase-orders/user/${user.id}`, {
+      const { token, userId } = getState().auth;
+      
+      if (!userId) {
+        return rejectWithValue('Usuario no autenticado');
+      }
+      
+      if (!token) {
+        return rejectWithValue('Token no disponible');
+      }
+      
+      const response = await api.get(`/purchase-orders/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener las órdenes');
+      return rejectWithValue('Error al cargar las órdenes');
     }
   }
 );
@@ -42,7 +52,7 @@ export const fetchOrderById = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener la orden');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar la orden');
     }
   }
 );
@@ -57,7 +67,7 @@ export const fetchAllOrders = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener las órdenes');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar las órdenes');
     }
   }
 );

@@ -7,24 +7,19 @@ import productReducer from './slices/productSlice'
 import orderReducer from './slices/orderSlice'
 import adminReducer from './slices/adminSlice'
 import uiReducer from './slices/uiSlice'
+import userReducer from './slices/userSlice'
 import { setupApiInterceptors } from '../services/api'
 
 const authPersistConfig = {
   key: 'auth',
   storage,
-  whitelist: ['user', 'token', 'isAuthenticated']
+  whitelist: ['userId', 'token', 'isAuthenticated']
 };
 
 const cartPersistConfig = {
   key: 'cart',
   storage,
   whitelist: ['cartItems']
-};
-
-const uiPersistConfig = {
-  key: 'ui',
-  storage,
-  whitelist: ['theme']
 };
 
 export const store = configureStore({
@@ -34,7 +29,8 @@ export const store = configureStore({
         products: productReducer,
         orders: orderReducer,
         admin: adminReducer,
-        ui: persistReducer(uiPersistConfig, uiReducer),
+        ui: uiReducer,
+        user: userReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

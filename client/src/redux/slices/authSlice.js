@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 import { clearCart } from './cartSlice';
+import { clearUserProfile } from './userSlice';
 
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
@@ -17,7 +18,7 @@ export const loginUser = createAsyncThunk(
       
       return {
         token: access_token,
-        user: userResponse.data
+        userId: userResponse.data.id
       };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Error en el login');
@@ -48,27 +49,10 @@ export const registerUser = createAsyncThunk(
 
       return {
         token: access_token,
-        user: userResponse.data
+        userId: userResponse.data.id
       };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Error en el registro');
-    }
-  }
-);
-
-export const updateUserProfile = createAsyncThunk(
-  'auth/updateUserProfile',
-  async ({ userId, userData }, { getState, rejectWithValue }) => {
-    try {
-      const { token } = getState().auth;
-      const response = await api.put(`/users/${userId}`, userData, {
-        headers: { 
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al actualizar perfil');
     }
   }
 );
@@ -77,12 +61,13 @@ export const logoutUser = createAsyncThunk(
   'auth/logoutUser',
   async (_, { dispatch }) => {
     dispatch(clearCart());
+    dispatch(clearUserProfile());
     return true;
   }
 );
 
 const initialState = {
-  user: null,
+  userId: null,
   token: null,
   loading: false,
   error: null,
@@ -94,7 +79,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
+      state.userId = null;
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
@@ -106,8 +91,8 @@ const authSlice = createSlice({
       state.token = action.payload;
       state.isAuthenticated = !!action.payload;
     },
-    setUser: (state, action) => {
-      state.user = action.payload;
+    setUserId: (state, action) => {
+      state.userId = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -119,7 +104,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.userId = action.payload.userId;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
@@ -136,7 +121,7 @@ const authSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.userId = action.payload.userId;
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
@@ -146,23 +131,10 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.isAuthenticated = false;
       })
-      // Update Profile
-      .addCase(updateUserProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        state.error = null;
-      })
-      .addCase(updateUserProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+
       // Logout User
       .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
+        state.userId = null;
         state.token = null;
         state.isAuthenticated = false;
         state.error = null;
@@ -172,12 +144,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, setToken, setUser } = authSlice.actions;
+export const { logout, clearError, setToken, setUserId } = authSlice.actions;
 
 // Selectors
 export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
-export const selectAuthUser = (state) => state.auth.user;
+export const selectAuthUserId = (state) => state.auth.userId;
 export const selectAuthToken = (state) => state.auth.token;
 export const selectAuthIsAuthenticated = (state) => state.auth.isAuthenticated;
 

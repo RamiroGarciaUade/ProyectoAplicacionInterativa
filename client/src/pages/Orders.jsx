@@ -8,12 +8,15 @@ import {
   selectOrdersLoading, 
   selectOrdersError 
 } from '../redux/slices/orderSlice';
+import { selectUserProfile } from '../redux/slices/userSlice';
 
 const Orders = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const userId = useAppSelector((state) => state.auth.userId);
+  const user = useAppSelector(selectUserProfile);
   const orders = useAppSelector(selectUserOrders);
   const isLoading = useAppSelector(selectOrdersLoading);
   const error = useAppSelector(selectOrdersError);
@@ -45,17 +48,18 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && userId) {
       dispatch(fetchUserOrders());
-    } else {
+    } else if (!isAuthenticated) {
       navigate('/');
     }
-  }, [dispatch, isAuthenticated, user, navigate]);
+  }, [dispatch, isAuthenticated, userId, navigate]);
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-green-700">Cargando órdenes...</p>
       </div>
     );
   }
@@ -76,9 +80,14 @@ const Orders = () => {
         Mis Órdenes
       </h1>
       
-      {orders.length === 0 ? (
+      {!orders ? (
         <div className="text-center text-gray-600">
-          No tenés ninguna orden todavía
+          <p className="text-lg mb-2">Cargando órdenes...</p>
+        </div>
+      ) : orders.length === 0 ? (
+        <div className="text-center text-gray-600">
+          <p className="text-lg mb-2">No tenés ninguna orden todavía</p>
+          <p className="text-sm">¡Hacé tu primera compra en nuestra tienda!</p>
         </div>
       ) : (
         <div className="space-y-6">

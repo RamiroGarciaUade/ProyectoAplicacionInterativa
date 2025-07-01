@@ -14,7 +14,7 @@ const calculateEffectivePrice = (product) => {
 // Thunk validar productos del carrito
 const validateCartItems = createAsyncThunk(
   'cart/validateCartItems',
-  async (_, { getState, dispatch }) => {
+  async (_, { getState, dispatch, rejectWithValue }) => {
     const { cartItems } = getState().cart;
     const { token } = getState().auth;
     
@@ -22,6 +22,7 @@ const validateCartItems = createAsyncThunk(
     
     const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     const removedItems = [];
+    let hasNetworkError = false;
     
     for (const item of cartItems) {
       try {
@@ -39,10 +40,16 @@ const validateCartItems = createAsyncThunk(
           }
         }
       } catch (error) {
-        if (error.response?.status === 404 || error.response?.status === 400) {
+        if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+          hasNetworkError = true;
+        } else if (error.response?.status === 404 || error.response?.status === 400) {
           removedItems.push(item.id);
         }
       }
+    }
+    
+    if (hasNetworkError) {
+      return rejectWithValue('Error al validar los productos del carrito');
     }
     
     return { validItems: cartItems.filter(item => !removedItems.includes(item.id)), removedItems };
@@ -89,6 +96,7 @@ const initialState = {
     quantityAdded: 0,
   },
   validationLoading: false,
+  validationError: null,
   removedProducts: [],
 };
 
@@ -174,9 +182,11 @@ const cartSlice = createSlice({
     builder
       .addCase(validateCartItems.pending, (state) => {
         state.validationLoading = true;
+        state.validationError = null;
       })
       .addCase(validateCartItems.fulfilled, (state, action) => {
         state.validationLoading = false;
+        state.validationError = null;
         const { removedItems } = action.payload;
         
         if (removedItems.length > 0) {
@@ -184,8 +194,9 @@ const cartSlice = createSlice({
           state.removedProducts = removedItems;
         }
       })
-      .addCase(validateCartItems.rejected, (state) => {
+      .addCase(validateCartItems.rejected, (state, action) => {
         state.validationLoading = false;
+        state.validationError = 'Error al validar los productos del carrito';
       })
       .addCase(addToCartWithValidation.pending, (state) => {
         state.validationLoading = true;
@@ -218,6 +229,7 @@ export const selectCartTotal = (state) =>
   state.cart.cartItems.reduce((total, item) => total + (item.effectivePrice * item.quantity), 0);
 export const selectNotification = (state) => state.cart.notification;
 export const selectValidationLoading = (state) => state.cart.validationLoading;
+export const selectValidationError = (state) => state.cart.validationError;
 export const selectRemovedProducts = (state) => state.cart.removedProducts;
 
 export default cartSlice.reducer; 

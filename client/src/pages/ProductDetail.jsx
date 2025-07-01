@@ -107,7 +107,8 @@ const ProductDetail = () => {
   const discountPercentage = product.discountPercentage ? parseFloat(product.discountPercentage) : 0;
   const effectivePrice = calculateDiscountedPrice(originalPrice, discountPercentage);
 
-  const currentCartItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const currentProductInCart = cartItems.find(item => item.id === parseInt(productId));
+  const currentProductQuantity = currentProductInCart ? currentProductInCart.quantity : 0;
 
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId);
@@ -262,8 +263,8 @@ const ProductDetail = () => {
 
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Productos en carrito:</span>
-                  <span className="font-semibold">{currentCartItemCount}</span>
+                  <span>Cantidad en carrito:</span>
+                  <span className="font-semibold">{currentProductQuantity}</span>
                 </div>
               </div>
             </div>

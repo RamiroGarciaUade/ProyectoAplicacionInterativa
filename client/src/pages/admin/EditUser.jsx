@@ -9,7 +9,9 @@ import {
   selectAdminUsers,
   selectAdminLoading,
   selectAdminError,
-  clearError
+  selectAdminSuccess,
+  clearError,
+  clearSuccess
 } from "../../redux/slices/adminSlice";
 
 const EditUser = () => {
@@ -21,6 +23,7 @@ const EditUser = () => {
   const users = useAppSelector(selectAdminUsers);
   const loading = useAppSelector(selectAdminLoading);
   const error = useAppSelector(selectAdminError);
+  const success = useAppSelector(selectAdminSuccess);
 
   const [user, setUser] = useState({
     id: "",
@@ -35,6 +38,7 @@ const EditUser = () => {
 
   useEffect(() => {
     dispatch(clearError());
+    dispatch(clearSuccess());
     if (!isNew) {
       dispatch(fetchAllUsers());
     }
@@ -117,23 +121,54 @@ const EditUser = () => {
     }
   };
 
-  if (loading) return <div>Cargando usuario...</div>;
-  if (error) return <div className="text-red-600">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-green-700">Cargando usuario...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
   if (!isNew && users.length > 0 && !users.find(u => String(u.id) === String(id))) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-lg font-semibold text-center">
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           Usuario con ID: {id} no encontrado.
         </div>
       </div>
     );
   }
-  if (!isNew && (!user || !user.id)) return <div>Cargando datos del usuario...</div>;
+  
+  if (!isNew && (!user || !user.id)) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        <p className="ml-4 text-green-700">Cargando datos del usuario...</p>
+      </div>
+    );
+  }
   if (!user) return null;
 
   return (
     <div className="max-w-xl mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6 text-green-800 font-['Merriweather']">{isNew ? "Crear Usuario" : "Editar Usuario"}</h1>
+      
+      {success && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          {success}
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow">
         {!isNew && (
           <div>
@@ -182,15 +217,16 @@ const EditUser = () => {
         <div className="flex gap-4 mt-6">
           <button
             type="submit"
-            className={`px-6 py-2 rounded transition-colors font-semibold ${hasChanges() ? "bg-green-700 text-white hover:bg-green-800" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
-            disabled={!hasChanges()}
+            className={`px-6 py-2 rounded transition-colors font-semibold ${hasChanges() && !loading ? "bg-green-700 text-white hover:bg-green-800" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
+            disabled={!hasChanges() || loading}
           >
-            {isNew ? "Crear" : "Guardar"}
+            {loading ? "Guardando..." : (isNew ? "Crear" : "Guardar")}
           </button>
           <button
             type="button"
             onClick={() => navigate("/admin/users")}
-            className="px-6 py-2 rounded font-semibold bg-green-200 text-green-900 hover:bg-green-300 transition-colors"
+            disabled={loading}
+            className={`px-6 py-2 rounded font-semibold transition-colors ${loading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-green-200 text-green-900 hover:bg-green-300"}`}
           >
             Cancelar
           </button>

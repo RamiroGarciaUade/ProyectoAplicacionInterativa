@@ -154,7 +154,7 @@ const Shop = () => {
                 <p className="ml-4 text-green-700">Cargando productos...</p>
               </div>
             ) : error ? (
-              <div className="text-center text-red-600 min-h-[200px]">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
                 <p>{error}</p>
               </div>
             ) : filteredProducts.length > 0 ? (

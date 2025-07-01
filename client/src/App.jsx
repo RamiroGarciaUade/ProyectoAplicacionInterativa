@@ -6,6 +6,7 @@ import { useAppDispatch } from "./hooks/useAppDispatch";
 import { closeNotification } from "./redux/slices/cartSlice";
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
+import AppInitializer from "./components/AppInitializer";
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import About from "./pages/About";
@@ -42,7 +43,8 @@ const AppContent = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <AppInitializer>
+      <div className="flex flex-col min-h-screen">
       {location.pathname !== "/logout" && (
         <Navbar onLoginClick={() => setShowLogin(true)} />
       )}
@@ -134,7 +136,8 @@ const AppContent = () => {
           onClose={handleCloseNotification}
         />
       )}
-    </div>
+      </div>
+    </AppInitializer>
   );
 };
 

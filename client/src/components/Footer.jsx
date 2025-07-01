@@ -96,7 +96,7 @@ const Footer = () => {
             <form onSubmit={handleSubmit} className="flex">
               <input
                 type="email"
-                placeholder="Tu Email"
+                placeholder="Tu email acá"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="p-2 rounded-l-md w-full text-green-600 border border-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 placeholder-green-400"

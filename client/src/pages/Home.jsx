@@ -8,11 +8,11 @@ import {
   selectProducts,
   selectCategories,
   selectProductsLoading,
-  selectProductsError
+  selectProductsError,
+  selectCategoriesError
 } from "../redux/slices/productSlice";
 import Hero from "../components/Hero";
 import ProductCard from "../components/ProductCard";
-import ProductCarousel from "../components/ProductCarousel";
 
 const Home = () => {
   const dispatch = useAppDispatch();
@@ -20,7 +20,8 @@ const Home = () => {
   const products = useAppSelector(selectProducts);
   const categories = useAppSelector(selectCategories);
   const loading = useAppSelector(selectProductsLoading);
-  const error = useAppSelector(selectProductsError);
+  const productsError = useAppSelector(selectProductsError);
+  const categoriesError = useAppSelector(selectCategoriesError);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -28,11 +29,6 @@ const Home = () => {
   }, [dispatch]);
 
   const featuredProducts = products.slice(0, 4);
-
-  const veganProducts = products.filter(product =>
-    product.name.toLowerCase().includes('vegan') ||
-    product.description.toLowerCase().includes('vegano')
-  );
 
   const randomCategories = categories.length > 0
     ? [...categories].sort(() => 0.5 - Math.random()).slice(0, 3)
@@ -47,15 +43,15 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="bg-green-100 p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-bold text-green-800 mb-2">Envíos Rápidos</h3>
-              <p className="text-gray-700">Recibe tus productos en la comodidad de tu hogar.</p>
+              <p className="text-gray-700">Recibí tus productos en la comodidad de tu hogar.</p>
             </div>
             <div className="bg-green-100 p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-bold text-green-800 mb-2">Compra Segura</h3>
-              <p className="text-gray-700">Tus datos y pagos protegidos con tecnología avanzada.</p>
+              <p className="text-gray-700">Tus datos y pagos siempre protegidos.</p>
             </div>
             <div className="bg-green-100 p-6 rounded-lg shadow-sm">
               <h3 className="text-xl font-bold text-green-800 mb-2">Atención Personalizada</h3>
-              <p className="text-gray-700">Estamos aquí para ayudarte en lo que necesites.</p>
+              <p className="text-gray-700">Estamos para ayudarte en lo que necesites.</p>
             </div>
           </div>
         </div>
@@ -64,16 +60,16 @@ const Home = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center mb-10">
-            Productos Destacados
+            Productos destacados
           </h2>
           {loading ? (
             <div className="flex justify-center items-center">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
               <p className="ml-4 text-green-700">Cargando destacados...</p>
             </div>
-          ) : error ? (
-            <div className="text-center text-red-600">
-              <p>{error}</p>
+          ) : productsError ? (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+              <p>{productsError}</p>
             </div>
           ) : featuredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
@@ -95,32 +91,32 @@ const Home = () => {
         </div>
       </section>
 
-      {loading ? (
-        <div className="py-12 flex justify-center items-center bg-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-          <p className="ml-4 text-green-700">Cargando productos veganos...</p>
-        </div>
-      ) : error ? (
-        <div className="py-12 text-center text-red-600 bg-white">
-          <p>{error}</p>
-        </div>
-      ) : (
-        <ProductCarousel title="Productos Veganos" products={veganProducts} />
-      )}
-
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-['Merriweather'] font-bold text-green-800 text-center mb-10">
-            Explora Nuestras Categorías
+            Explorá nuestras categorías
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {randomCategories.map((cat) => (
-              <div key={cat.id} className="bg-gray-100 p-6 rounded-lg shadow-md text-center">
-                <h3 className="text-xl font-bold text-green-700 mb-2">{cat.name}</h3>
-                <p className="text-gray-600">{cat.description}</p>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+              <p className="ml-4 text-green-700">Cargando categorías...</p>
+            </div>
+          ) : categoriesError ? (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+              <p>{categoriesError}</p>
+            </div>
+          ) : randomCategories.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {randomCategories.map((cat) => (
+                <div key={cat.id} className="bg-gray-100 p-6 rounded-lg shadow-md text-center">
+                  <h3 className="text-xl font-bold text-green-700 mb-2">{cat.name}</h3>
+                  <p className="text-gray-600">{cat.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">No hay categorías para mostrar.</p>
+          )}
         </div>
       </section>
     </>

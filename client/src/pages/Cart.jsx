@@ -6,6 +6,7 @@ import {
   selectCartItems, 
   selectCartTotal,
   selectValidationLoading,
+  selectValidationError,
   selectRemovedProducts,
   removeFromCart, 
   updateQuantity,
@@ -20,6 +21,7 @@ const Cart = ({ onLoginClick }) => {
   const cartItems = useAppSelector(selectCartItems);
   const totalAmount = useAppSelector(selectCartTotal);
   const validationLoading = useAppSelector(selectValidationLoading);
+  const validationError = useAppSelector(selectValidationError);
   const removedProducts = useAppSelector(selectRemovedProducts);
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
@@ -97,6 +99,12 @@ const Cart = ({ onLoginClick }) => {
       <h1 className="text-3xl font-['Merriweather'] font-bold text-green-800 mb-8">
         Tu Carrito
       </h1>
+      
+      {validationError && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center">
+          Error al validar los productos del carrito
+        </div>
+      )}
       
       {showRemovedNotification && (
         <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -227,7 +235,8 @@ const Cart = ({ onLoginClick }) => {
           </div>
           <button
             onClick={handleProceedToCheckout}
-            className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-700 transition-colors"
+            className={`w-full py-3 rounded-lg transition-colors text-white ${validationError ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-800 hover:bg-green-700'}`}
+            disabled={!!validationError}
           >
             Proceder al pago
           </button>

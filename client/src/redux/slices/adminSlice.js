@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
-import { setUser } from './authSlice';
+import { fetchUserProfile } from './userSlice';
 
 // Async thunks usuarios
 export const fetchAllUsers = createAsyncThunk(
@@ -13,7 +13,7 @@ export const fetchAllUsers = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener usuarios');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar usuarios');
     }
   }
 );
@@ -44,10 +44,10 @@ export const updateUser = createAsyncThunk(
           'Content-Type': 'application/json'
         }
       });
-      
-      const currentUser = getState().auth.user;
-      if (currentUser && currentUser.id === parseInt(userId)) {
-        dispatch(setUser(response.data));
+
+      const currentUserId = getState().auth.userId;
+      if (currentUserId && parseInt(userId) === currentUserId) {
+        dispatch(fetchUserProfile(currentUserId));
       }
       
       return response.data;
@@ -85,7 +85,7 @@ export const fetchAllCategories = createAsyncThunk(
       });
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener categorías');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar categorías');
     }
   }
 );

@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../hooks/useAppSelector";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import { selectCartItems } from "../redux/slices/cartSlice";
-import { logoutUser } from "../redux/slices/authSlice";
+import { logoutUser, selectAuthUserId, selectAuthIsAuthenticated } from "../redux/slices/authSlice";
+import { selectUserProfile, fetchUserProfile, selectUserLoading, selectUserError } from "../redux/slices/userSlice";
+import { selectAdminSuccess } from "../redux/slices/adminSlice";
 import AdminLink from "../pages/AdminProduct";
 import UserCart from "../components/UserCart";
 import { jwtDecode } from "jwt-decode";
@@ -14,12 +16,18 @@ const NavBar = ({ onLoginClick }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector(selectCartItems);
-  const { isAuthenticated, token, user } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectAuthIsAuthenticated);
+  const userId = useAppSelector(selectAuthUserId);
+  const user = useAppSelector(selectUserProfile);
+  const userLoading = useAppSelector(selectUserLoading);
+  const userError = useAppSelector(selectUserError);
+  const token = useAppSelector((state) => state.auth.token);
+  const adminSuccess = useAppSelector(selectAdminSuccess);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isAuthenticated && token && userId) {
       try {
         const decoded = jwtDecode(token);
         const role = decoded?.role || decoded?.authorities?.[0]?.authority;
@@ -31,7 +39,13 @@ const NavBar = ({ onLoginClick }) => {
     } else {
       setUserRole(null);
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, token, userId]);
+
+  useEffect(() => {
+    if (adminSuccess && adminSuccess.includes('actualizado') && userId) {
+      dispatch(fetchUserProfile(userId));
+    }
+  }, [adminSuccess, userId, dispatch]);
 
   const cartItemsCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -60,6 +74,14 @@ const NavBar = ({ onLoginClick }) => {
       setIsMenuOpen(false);
     }
   };
+
+  const userDisponible = !!(user && user.firstName);
+
+  useEffect(() => {
+    if ((!userDisponible || userError) && isUserMenuOpen) {
+      setIsUserMenuOpen(false);
+    }
+  }, [userDisponible, userError, isUserMenuOpen]);
 
   return (
     <nav className="bg-white shadow-md font-['Montserrat']">
@@ -123,21 +145,30 @@ const NavBar = ({ onLoginClick }) => {
             <UserCart count={cartItemsCount} />
             {isAuthenticated ? (
               <div className="relative">
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200"
-                >
-                  <span>¡Hola, <span className="text-green-600 font-bold">{user?.firstName}</span>!</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                {userLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-green-500"></div>
+                    <span className="ml-2 text-green-700">Cargando usuario...</span>
+                  </div>
+                ) : userError ? (
+                  <span className="text-red-600">Usuario no disponible</span>
+                ) : userDisponible ? (
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-1 text-gray-700 hover:text-green-600 transition-colors duration-200"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {isUserMenuOpen && (
+                    <span>¡Hola, <span className="text-green-600 font-bold">{user.firstName}</span>!</span>
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                ) : null}
+                {isUserMenuOpen && userDisponible && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     {userRole === "ADMIN" && (
                       <>

@@ -11,7 +11,7 @@ export const fetchProducts = createAsyncThunk(
       const response = await api.get('/products', config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener productos');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar productos');
     }
   }
 );
@@ -25,7 +25,7 @@ export const fetchProductById = createAsyncThunk(
       const response = await api.get(`/products/${productId}`, config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener el producto');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar el producto');
     }
   }
 );
@@ -39,7 +39,7 @@ export const fetchCategories = createAsyncThunk(
       const response = await api.get('/categories', config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener categorías');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar categorías');
     }
   }
 );
@@ -53,7 +53,7 @@ export const fetchProductsByCategory = createAsyncThunk(
       const response = await api.get(`/products/category/${categoryId}`, config);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Error al obtener productos por categoría');
+      return rejectWithValue(error.response?.data?.message || 'Error al cargar productos por categoría');
     }
   }
 );
@@ -63,7 +63,8 @@ const initialState = {
   categories: [],
   currentProduct: null,
   loading: false,
-  error: null,
+  errorProducts: null,
+  errorCategories: null,
   filters: {
     category: null,
     searchTerm: '',
@@ -76,8 +77,11 @@ const productSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    clearError: (state) => {
-      state.error = null;
+    clearErrorProducts: (state) => {
+      state.errorProducts = null;
+    },
+    clearErrorCategories: (state) => {
+      state.errorCategories = null;
     },
     clearCurrentProduct: (state) => {
       state.currentProduct = null;
@@ -100,75 +104,77 @@ const productSlice = createSlice({
       // Fetch Products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
         state.products = action.payload;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.errorProducts = action.payload;
       })
       // Fetch Product by ID
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
         state.currentProduct = action.payload;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.errorProducts = action.payload;
       })
       // Fetch Categories
       .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.errorCategories = null;
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
         state.categories = action.payload;
-        state.error = null;
+        state.errorCategories = null;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.errorCategories = action.payload;
       })
       // Fetch Products by Category
       .addCase(fetchProductsByCategory.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProductsByCategory.fulfilled, (state, action) => {
         state.loading = false;
         state.products = action.payload;
-        state.error = null;
+        state.errorProducts = null;
       })
       .addCase(fetchProductsByCategory.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.errorProducts = action.payload;
       });
   },
 });
 
-export const { 
-  clearError, 
-  clearCurrentProduct, 
-  setFilter, 
-  clearFilters 
+export const {
+  clearErrorProducts,
+  clearErrorCategories,
+  clearCurrentProduct,
+  setFilter,
+  clearFilters
 } = productSlice.actions;
 
 // Selectors
 export const selectProducts = (state) => state.products.products;
-export const selectCategories = (state) => state.products.categories;
 export const selectCurrentProduct = (state) => state.products.currentProduct;
 export const selectProductsLoading = (state) => state.products.loading;
-export const selectProductsError = (state) => state.products.error;
+export const selectProductsError = (state) => state.products.errorProducts;
+export const selectCategories = (state) => state.products.categories;
+export const selectCategoriesError = (state) => state.products.errorCategories;
 export const selectFilters = (state) => state.products.filters;
 
 export default productSlice.reducer; 
